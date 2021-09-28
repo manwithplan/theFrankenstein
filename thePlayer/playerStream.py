@@ -145,8 +145,7 @@ class playerStream():
 
         except Exception as e:
             print("fadeAndMix can't be executed because of {}".format(e))
-
-           
+        
 
     def callback(self, in_data, frame_count, time_info, status):
 
