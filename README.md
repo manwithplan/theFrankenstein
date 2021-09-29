@@ -1,4 +1,4 @@
-### The FrankenStein
+# The FrankenStein
 
 Based on an old project, I have a dataset of 800+ pieces of classical music 
 divided into snippets by **beat**.
@@ -7,7 +7,7 @@ I have analyzed the music for each snippet seperately using libraries like
 *madmom*, which is built by the AI division of the University of Vienna.
 It can be freely imported into any Python script.
 
-# The Mixer
+### The Mixer
 
 The feature I will be building this week is a real-time mixer. It should be 
 capable of:
