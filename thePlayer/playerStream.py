@@ -189,6 +189,13 @@ class playerStream():
     def getPipelineInfo(self):
         return [self.pipeline, self.pipelineNames]
 
+    def getFutureSnippet(self, distance):
+        """
+        returns a music snippet that will be played in the near future. By setting the distance
+        some time is given for the similaritysearch to be completed.
+        """
+        return self.pipelineNames[self.pipelineCounter + distance]
+
 
     def getAudioProperties(self, audioFile):
         

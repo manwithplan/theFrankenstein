@@ -2,6 +2,7 @@ import keyboard
 from queue import Queue
 
 from thePlayer.playerStream import playerStream
+from thePlayer.databaseMain import databaseMain
 
 class musicMain():
 
@@ -37,12 +38,29 @@ class musicMain():
 
                 self.playbackActive = False
                 self.player = playerStream()
+                self.data = databaseMain()
 
-                
+                self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
+                self.snippetFileNames = []
+
+                for x in range(1,49):
+                        self.snippetFileNames.append( self.piece + "_" + str(x) + ".wav")
 
         def main(self):
 
+                while True:
 
+                        if keyboard.is_pressed('o'):
+                                self.player.openStream()
+                        elif keyboard.is_pressed('s'):
+                                self.player.writeToPipeline( self.snippetFileNames )
+                        elif keyboard.is_pressed('n'):
+                                toMatch = self.player.getFutureSnippet(2)
+                                self.data.findSimilarPiece(toMatch)
+                                self.player.fadeAndMix()
+                        elif keyboard.is_pressed('q'):
+                                self.player.closeStream()
+                                break
 
         def openMusicPlayer(self):
                 
