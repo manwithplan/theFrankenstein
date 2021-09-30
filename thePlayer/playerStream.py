@@ -35,8 +35,8 @@ class playerStream():
     def __init__(self):
         super().__init__()
 
-        self.snippetURL = rootURL + musicSnippetsURL
-        self.fullURL = rootURL + musicFullURL
+        self.snippetURL = musicSnippetsURL
+        self.fullURL = musicFullURL
 
         # initializing the audio properties
         self.format = 8
@@ -92,7 +92,7 @@ class playerStream():
         # taking a list of fileNames and writing it to the Snippets list as audioSegments on one hand and storing the fileNames in pipelineNames.
         for fileName in fileNames:
             # load an audioSegment into the pipeline, with audio properties set to the ones we prefer.
-            self.pipeline.append( pydub.AudioSegment.from_file(rootURL + musicSnippetsURL + fileName).set_sample_width(self.sampleWidth).set_channels(self.channels).set_frame_rate(self.rate) )
+            self.pipeline.append( pydub.AudioSegment.from_file(self.snippetURL + fileName).set_sample_width(self.sampleWidth).set_channels(self.channels).set_frame_rate(self.rate) )
             #print('{} properties : format - {} | channels : {} | rate : {}'.format(fileName, self.p.get_format_from_width(self.pipeline[-1].sample_width), self.pipeline[-1].channels, self.pipeline[-1].frame_rate))
             # store the fileNames in pipelineNames
             self.pipelineNames.append(fileName)
@@ -115,6 +115,8 @@ class playerStream():
         self.pipeline = self.pipeline[:self.pipelineCounter + 4]
         self.pipeline[-1] = self.pipeline[-1].append( pydub.AudioSegment.silent(duration=len(self.pipeline[-1])), crossfade = len(self.pipeline[-1]) - 100 )
 
+        self.pipelineNames = self.pipelineNames[:self.pipelineCounter + 4]
+
 
     def fadeAndMix(self, fileNames, location = 0):
         # the goal is to crossfade into a new piece of music. The basic mechanism is to delete the remaining snippets
@@ -128,8 +130,9 @@ class playerStream():
 
         try:
             self.pipeline = self.pipeline[:self.pipelineCounter + 4]
+            self.pipelineNames = self.pipelineNames[:self.pipelineCounter + 4]
 
-            firstSnippet = pydub.AudioSegment.from_file(rootURL + musicSnippetsURL + fileNames[location]).set_sample_width(self.sampleWidth).set_channels(self.channels).set_frame_rate(self.rate) 
+            firstSnippet = pydub.AudioSegment.from_file(self.snippetURL + fileNames[location]).set_sample_width(self.sampleWidth).set_channels(self.channels).set_frame_rate(self.rate) 
 
             if len(self.pipeline[-1]) >= len( firstSnippet ):
 
@@ -189,6 +192,7 @@ class playerStream():
     def getPipelineInfo(self):
         return [self.pipeline, self.pipelineNames]
 
+
     def getFutureSnippet(self, distance):
         """
         returns a music snippet that will be played in the near future. By setting the distance
@@ -200,7 +204,7 @@ class playerStream():
     def getAudioProperties(self, audioFile):
         
         # this function will take in a fileName string that corresponds with the path of the file.
-        temp = pydub.AudioSegment.from_file(rootURL + musicSnippetsURL + audioFile)
+        temp = pydub.AudioSegment.from_file(self.snippetURL + audioFile)
 
         # from it, it will determing the audio properties
         self.format = temp.sample_width

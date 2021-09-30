@@ -10,10 +10,11 @@ from os.path import dirname, abspath, realpath, join
 
 # location variables
 rootURL = dirname( dirname(abspath(__file__)) )
-musicFullURL = r'C:\Users\aubin\Desktop\OmniPhony\Music\MusOpen\FilesSplitted'
-musicSnippetsURL = r'C:\Users\aubin\Desktop\OmniPhony\Music\MusOpen\Files'
+musicSnippetsURL = r'C:\Users\aubin\Desktop\OmniPhony\Music\MusOpen\FilesSplitted\\'
+musicFullURL = r'C:\Users\aubin\Desktop\OmniPhony\Music\MusOpen\Files\\'
 musicFullDataBaseURL = os.path.join(rootURL, "Database.csv")
 musicSnippetsDataBaseURL = os.path.join(rootURL, "DatabaseSplitted.csv")
+musicMoodsDataBaseURL = os.path.join(rootURL, "Cyanite.csv")
 
 # global variables
 shutterSpeed = 1 # the time between 2 imageGrabs
