@@ -70,6 +70,7 @@ class databaseMain():
 
         # the result is a list of the best matches to the reference piece.
         finalMatches = matches.nsmallest(20, 'commonRatio')
+        finalMatches = finalMatches.iloc[1: , :]
 
         # here I will now write some code that gathers the moods of the music in order to give the user/program 
         # a choice about what the next piece will be.
@@ -107,7 +108,11 @@ class databaseMain():
         matchedSnippets = []
 
         # from this list we want to gather all the filenames of the snippets that follow our match and gather them in a list.
-        matchedSecondaryKey = match['SecondaryKeys'].item()
+        try:
+            matchedSecondaryKey = match['SecondaryKeys'].item()
+        except AttributeError:
+            matchedSecondaryKey = match['SecondaryKeys']
+            
         lookupKey = int(matchedSecondaryKey[-4:])
 
         total = match['TotalSnippets'].item()
