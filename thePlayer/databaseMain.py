@@ -74,16 +74,32 @@ class databaseMain():
         # here I will now write some code that gathers the moods of the music in order to give the user/program 
         # a choice about what the next piece will be.
         
+        # Make a new dataframe column that can store the moods.
+        finalMatches['Moods'] = ""
 
-        
+        # make a new list that can store the moods themselves.
+        allMoods = []
 
-        
+        # iterate over rows in the finalmatches and lookup the moods in the seperate database.
+        for index, row in finalMatches.iterrows():
+            key = row['PrimaryKeys']
+            moods = self.gatherMoods(key) 
+            allMoods.append(moods)
+
+        # write the moods to the newly created column.
+        finalMatches['Moods'] = allMoods    
 
         # return the potential matches.
         return finalMatches
 
 
     #def getSnippets(self, length = None):
+
+
+    def gatherMoods(self, matchByKey):
+        row = self.df_moods.loc[self.df_moods['PrimaryKey'] == matchByKey]
+        return row['MOODS (MOST DOMINANT)'].tolist()
+
 
 
     def gatherSnippets(self, match):
@@ -103,6 +119,7 @@ class databaseMain():
             matchedSnippets.append(snippetToWrite['FileNames'].item())
 
         return matchedSnippets
+
 
     def gatherData(self, referencePiece):
 
