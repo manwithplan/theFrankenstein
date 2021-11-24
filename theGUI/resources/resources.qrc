@@ -1,0 +1,28 @@
+<RCC>
+  <qresource prefix="Logo">
+    <file>omniPhony.png</file>
+  </qresource>
+  <qresource prefix="tutorial">
+    <file>icons/tut_cog.png</file>
+    <file>icons/tutBrain.png</file>
+    <file>icons/tutPics.png</file>
+    <file>icons/tutCamera.png</file>
+    <file>icons/tutPictures.png</file>
+    <file>icons/tutScreen.png</file>
+  </qresource>
+  <qresource prefix="gameIcons">
+    <file>icons/elite-dangerous.png</file>
+  </qresource>
+  <qresource prefix="Icons">
+    <file>icons/cil-gamepad.png</file>
+    <file>icons/cil-check-circle.png</file>
+    <file>icons/activeDarker.png</file>
+    <file>icons/activeDark.png</file>
+    <file>icons/activeLit.png</file>
+    <file>icons/active.png</file>
+    <file>icons/cil-home.png</file>
+    <file>icons/cil-menu.png</file>
+    <file>icons/cil-settings.png</file>
+    <file>icons/cil-user.png</file>
+  </qresource>
+</RCC>
