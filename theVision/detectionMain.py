@@ -448,7 +448,7 @@ class detectionMain:
         # selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain
         # threshold we can somewhat confidently say the player is engaging an enemy ship.
 
-        conflictThresholdMin = 4000
+        conflictThresholdMin = 5000
         conflictThresholdMax = 11000
 
         try:
