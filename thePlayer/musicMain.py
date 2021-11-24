@@ -46,7 +46,6 @@ class musicMain:
 
         # Create new custom pyaudio object, and open the stream.
         self.player = playerStream()
-        self.player.openStream()
 
         # create object of databaseclass.
         self.data = databaseMain()
@@ -62,6 +61,8 @@ class musicMain:
             "canyonRunning": ["energetic", "epic", "happy"],
             "planetaryExploration": ["spherical", "dark"],
             "slowTravel": ["sad", "chilled"],
+            "None": [],
+            "False": [],
         }
 
         # Currently still using this piece as the starting point.
@@ -70,6 +71,9 @@ class musicMain:
 
         for x in range(1, 49):
             self.snippetFileNames.append(self.piece + "_" + str(x) + ".wav")
+
+    def openStream(self):
+        self.player.writeToPipeline(self.snippetFileNames)
 
     def main(self, gameState):
         """
@@ -81,48 +85,52 @@ class musicMain:
         :return: None if no matches have been found, else the matched row from the database
         """
 
-        moods = self.moodToStateTranslator[gameState].copy()
+        matchFound = False
 
         # An attempt to find a match is done 3 times, if not, we will be returning None, and that will
         # be the flag to call the search method once more untill a match has been found.
-        tries = 3
-        for i in range(tries):
-            try:
-                self.player.writeToPipeline(self.snippetFileNames)
-                # Take the first element in the possible moods, and look it up, then delete it from the list.
-                mood = moods[0]
-                moods.pop()
+        if not matchFound:
+            tries = 3
+            for i in range(tries):
+                try:
+                    moods = self.moodToStateTranslator[gameState].copy()
 
-                # from the pipeline of music currently played, get a snippet in the future.
-                # in this case 2 snippets from the current one being played.
-                toMatch = self.player.getFutureSnippet(2)
-                matches = self.data.findSimilarPiece(toMatch)
+                    # Take the first element in the possible moods, and look it up, then delete it from the list.
+                    mood = moods[i]
 
-                # from the matches that match our mood select a random one by index
-                matchesIndex = matches.filter(like=mood, axis=1)
+                    # from the pipeline of music currently played, get a snippet in the future.
+                    # in this case 2 snippets from the current one being played.
+                    toMatch = self.player.getFutureSnippet(2)
+                    matches = self.data.findSimilarPiece(toMatch)
 
-                # Check if a result has been found, else raise an error.
-                if matchesIndex.empty:
-                    raise KeyError
+                    # from the matches that match our mood select a random one by index
+                    matchesIndex = matches.Moods.str.contains(mood)
 
-                match = matchesIndex.sample()
-                matchedRow = matches.loc[match.index.values[0]]
+                    # Check if a result has been found, else raise an error.
+                    if matchesIndex.empty:
+                        raise KeyError
 
-                filenames = self.data.gatherSnippets(matchedRow)
-                self.player.fadeAndMix(filenames, 0)
+                    match = matchesIndex.sample()
+                    matchedRow = matches.loc[match.index.values[0]]
 
-                return matchedRow["PrimaryKeys"]
+                    filenames = self.data.gatherSnippets(matchedRow)
+                    self.player.fadeAndMix(filenames, 0)
 
-            except KeyError:
-                if i < tries - 1:  # i is zero indexed
-                    print("keyError")
-                    continue
-                else:
-                    break
+                    matchFound = True
+                    return matchedRow["PrimaryKeys"]
 
-            except IndexError:
-                print("IndexError")
-                return None
+                except KeyError as e:
+                    if i < tries - 1:  # i is zero indexed
+                        print(e)
+                        continue
+                    else:
+                        pass
+
+                except IndexError as e:
+                    print(e)
+                    return None
+
+                break
 
     def manualMode(self):
         """

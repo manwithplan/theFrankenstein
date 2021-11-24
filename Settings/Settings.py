@@ -11,6 +11,7 @@ from os.path import dirname, abspath, realpath, join
 # location variables
 rootURL = dirname(dirname(abspath(__file__)))
 
+
 musicSnippetsURL = os.path.join(rootURL, "theMusic", "theSnippets")
 musicDBPath = "theDB"
 musicFullDataBaseURL = os.path.join(rootURL, musicDBPath, "Database.csv")

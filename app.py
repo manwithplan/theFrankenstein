@@ -15,7 +15,6 @@ if __name__ == "__main__":
     )
 
     music = musicMain()
-    print(music.main("bullshit"))
     music.closeMusicPlayer()
 
     # for index, row in matches.iterrows():

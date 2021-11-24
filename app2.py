@@ -26,6 +26,9 @@ if __name__ == "__main__":
     # initializing the music module
     music = musicMain()
     music.openMusicPlayer()
+    music.openStream()
+
+    currentState = "Init"
 
     while True:
 
@@ -34,13 +37,13 @@ if __name__ == "__main__":
             screenshots = visionMain.q.get()
             detector.runDetection(screenshots)
 
-            try:
-                cv2.imshow("result", detector.preview)
-                cv2.waitKey(1)
-            except Exception as e:
-                pass
+            print(detector.gameStateAvg)
 
-            music.main(detector.gameStateAvg)
+            if currentState != detector.gameStateAvg:
+                print("changed")
+                newMusic = music.main(detector.gameStateAvg)
+                if newMusic:
+                    currentState = detector.gameStateAvg
 
         if keyboard.is_pressed("q"):
             print("q")
