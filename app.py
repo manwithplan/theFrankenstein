@@ -1,22 +1,68 @@
+# import libraries
+import sys
 import time
+import keyboard
+from PySide6.QtWidgets import QApplication
+from queue import Queue
+import cv2
 
-from thePlayer.databaseMain import databaseMain
+# import modules
+from theVision.visionMain import visionMain
+from theVision.detectionMain import detectionMain
+
 from thePlayer.musicMain import musicMain
 
-import ast
-import numpy as np
-
+from theGUI.main import guiMain
 
 if __name__ == "__main__":
 
-    data = databaseMain()
-    matches = data.findSimilarPiece(
-        "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3_10.wav"
+    """
+    # initiliazing theVision module to get screenshots from the game window.
+    visionMain = visionMain()
+    visionMain.main()
+
+    # initializing the detection module
+    detector = detectionMain()
+    """
+    # initializing the music module
+    music = musicMain()
+    # music.openMusicPlayer()
+    # music.openStream()
+
+    currentState = "Init"
+
+    similar_pieces = music.data.findSimilarPiece(
+        "2 Legendes, S. 175 - I. St. Francois d' Assise, La predication aux oiseaux.flac_37.wav",
+        "Chill",
     )
 
-    music = musicMain()
-    music.closeMusicPlayer()
+    print(similar_pieces["FileNames"])
+    # music.main("conflictZone")
 
-    # for index, row in matches.iterrows():
-    #    print(row)
+    """
+    while True:
 
+        if visionMain.screenFound:
+
+            screenshots = visionMain.q.get()
+            detector.runDetection(screenshots)
+
+            if currentState != detector.gameStateAvg:
+
+                newMusic = music.main(detector.gameStateAvg)
+                if newMusic:
+                    currentState = detector.gameStateAvg
+
+        if keyboard.is_pressed("q"):
+            print("q")
+            visionMain.stopThread()
+            music.closeMusicPlayer()
+            break
+    """
+    """
+    app = QApplication(sys.argv)
+    main = guiMain()
+    main.setExternalFunctions(detectGameWindow)
+    main.openLogin()
+    sys.exit(app.exec_())
+    """

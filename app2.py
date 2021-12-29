@@ -37,10 +37,8 @@ if __name__ == "__main__":
             screenshots = visionMain.q.get()
             detector.runDetection(screenshots)
 
-            print(detector.gameStateAvg)
-
             if currentState != detector.gameStateAvg:
-                print("changed")
+
                 newMusic = music.main(detector.gameStateAvg)
                 if newMusic:
                     currentState = detector.gameStateAvg

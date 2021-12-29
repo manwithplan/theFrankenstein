@@ -7,6 +7,7 @@ from Settings.Settings import (
     musicFullDataBaseURL,
     musicSnippetsDataBaseURL,
     musicMoodsDataBaseURL,
+    musicSnippetsDataBaseTagsURL,
     shutterSpeed,
 )
 
@@ -24,19 +25,19 @@ class databaseMain:
 
         self.referencePiece = {}
 
-        self.df_snippets = pd.read_csv(musicSnippetsDataBaseURL)
+        self.df_snippets = pd.read_csv(musicSnippetsDataBaseTagsURL, index_col=0)
         self.df_full = pd.read_csv(musicFullDataBaseURL)
         self.df_moods = pd.read_csv(musicMoodsDataBaseURL)
 
-    def findSimilarPiece(self, referencePiece):
+    def findSimilarPiece(self, referencePiece, mood):
 
         """
         method that combines data gathering with analysis and returns a name of a snippet that represents
         the closest match.
-        """
 
-        # we will be returning a list of a sequence of snippets to be played after the other.
-        matchedSnippets = []
+        :referencePiece: string that represents the filename as it occurs in the full piece database
+        :mood: string representing the mood we are currently looking for
+        """
 
         # these weights allocate importance to the fidderent commonalities between the 2 snippets.
         self.weights = [1.2, 1, 0.2]
@@ -99,31 +100,42 @@ class databaseMain:
         # here I will now write some code that gathers the moods of the music in order to give the user/program
         # a choice about what the next piece will be.
 
-        # Make a new dataframe column that can store the moods.
+        # Make a new dataframe column that can store the value for the requested mood.
         finalMatches["Moods"] = ""
 
-        # make a new list that can store the moods themselves.
-        allMoods = []
+        # make a new list that can store the mood representation values themselves.
+        moodValues = []
 
-        # iterate over rows in the finalmatches and lookup the moods in the seperate database.
+        # iterate over rows in the finalmatches and lookup the values in the database.
         for index, row in finalMatches.iterrows():
-            key = row["PrimaryKeys"]
-            moods = self.gatherMoods(key)
-            allMoods.append(moods)
+            key = row["SecondaryKeys"]
+            moodVal = self.gatherMoods(key, mood)
+            moodValues.append(moodVal)
 
         # write the moods to the newly created column.
-        finalMatches["Moods"] = allMoods
+        finalMatches["Moods"] = moodValues
 
-        # return the potential matches.
-        return finalMatches
+        # return the potential matches, sorted from high mood awareness to low.
+        return finalMatches.sort_values("Moods", ascending=False)
 
-    # def getSnippets(self, length = None):
+    def gatherMoods(self, matchByKey, mood):
+        """
+        This function takes the n most similar matches as calculated in the function findSimilarPiece and gathers the mood values for it.
 
-    def gatherMoods(self, matchByKey):
-        row = self.df_moods.loc[self.df_moods["PrimaryKey"] == matchByKey]
-        return row["MOODS (MOST DOMINANT)"].tolist()
+        :matchByKey: int representing the SecondaryKeys entry in the database
+        :mood: string representing which mood values to look for
+        :return: a list containing all representational values for the given mood
+        """
+        row = self.df_snippets.loc[self.df_snippets["SecondaryKeys"] == matchByKey]
+        return row[mood].values[0]
 
     def gatherSnippets(self, match):
+        """
+        For a given snippet, get all the filenames that come after it in the correct order.
+
+        :match: string representing the filename as found in the snippet database TODO
+        :returns: list that contains strings representing filenames of snippets as found in the snippet database
+        """
 
         matchedSnippets = []
 
@@ -152,8 +164,10 @@ class databaseMain:
     def gatherData(self, referencePiece):
 
         """
-        gatherData gathers all relevant information from the different databases and aggregates them in
-        a dictionary 'self.referencePiece'.
+        Gathers all relevant columns from the different databases and aggregates them in
+        a dictionary 'self.referencePiece'
+
+        :referencePiece: string reference to the filename as it is found in the snippet database
         """
 
         referenceLocationSnippet = self.df_snippets.loc[
@@ -180,11 +194,13 @@ class databaseMain:
 
     def matchCounters(self, toMatch):
         """
-            This method is used in formatting string entries from the .csv files using pure voodoo.
-            Afterwards it actually calculates the amount of matching notes (and thus harmonic context)
-            """
+        This method is used in formatting string entries from the .csv files using pure voodoo.
+        Afterwards it actually calculates the amount of matching notes (and thus harmonic context)
+
+        :toMatch: string representation of the notes column in the datbase snippets database TODO
+        :return: sum of the commonly present notes TODO
+        """
         toCount = ast.literal_eval(toMatch)
         toCount = [int(x) for x in toCount]
         toCount = Counter(toCount)
         return sum((self.notesRef & toCount).values())
-

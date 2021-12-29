@@ -16,6 +16,9 @@ musicSnippetsURL = os.path.join(rootURL, "theMusic", "theSnippets")
 musicDBPath = "theDB"
 musicFullDataBaseURL = os.path.join(rootURL, musicDBPath, "Database.csv")
 musicSnippetsDataBaseURL = os.path.join(rootURL, musicDBPath, "DatabaseSplitted.csv")
+musicSnippetsDataBaseTagsURL = os.path.join(
+    rootURL, musicDBPath, "DatabaseSplittedTags.csv"
+)
 musicMoodsDataBaseURL = os.path.join(rootURL, musicDBPath, "Cyanite.csv")
 
 # global variables

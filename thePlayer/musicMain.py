@@ -13,30 +13,30 @@ class musicMain:
 
     """
 
-        Module for building the logic that selects the music to be played.
-        This module will take in commands from the urser and select and write music to a queue.
+    Module for building the logic that selects the music to be played.
+    This module will take in commands from the urser and select and write music to a queue.
 
-        Example commands :
+    Example commands :
 
-        self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
-                self.snippetFileNames = []
+    self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
+            self.snippetFileNames = []
 
-                for x in range(1,49):
-                        self.snippetFileNames.append( self.piece + "_" + str(x) + ".wav")
+            for x in range(1,49):
+                    self.snippetFileNames.append( self.piece + "_" + str(x) + ".wav")
 
-                self.piece2 = "Concerto Grosso no. 4, HWV 322- I. Larghetto affettuoso.flac"
-                self.snippetFileNames2 = []
+            self.piece2 = "Concerto Grosso no. 4, HWV 322- I. Larghetto affettuoso.flac"
+            self.snippetFileNames2 = []
 
-                for x in range(1,22):
-                        self.snippetFileNames2.append( self.piece2 + "_" + str(x) + ".wav")
+            for x in range(1,22):
+                    self.snippetFileNames2.append( self.piece2 + "_" + str(x) + ".wav")
 
-        self.player.fadeAndMix( self.snippetFileNames2, location = 0 )
+    self.player.fadeAndMix( self.snippetFileNames2, location = 0 )
 
-        self.player.fadeAndStopPlayback()
+    self.player.fadeAndStopPlayback()
 
-        self.player.writeToPipeline( self.snippetFileNames )
+    self.player.writeToPipeline( self.snippetFileNames )
 
-        """
+    """
 
     def __init__(self):
         super().__init__()
@@ -77,11 +77,11 @@ class musicMain:
 
     def main(self, gameState):
         """
-        main method that coordinates all music playback and database lookups. It takes the game 
+        main method that coordinates all music playback and database lookups. It takes the game
         state and selects new music based on mood tags. This method is only called when a music
         switching event is called from the main method.
 
-        :gameState: A string variable that represents the player's current action. 
+        :gameState: A string variable that represents the player's current action.
         :return: None if no matches have been found, else the matched row from the database
         """
 
@@ -101,7 +101,7 @@ class musicMain:
                     # from the pipeline of music currently played, get a snippet in the future.
                     # in this case 2 snippets from the current one being played.
                     toMatch = self.player.getFutureSnippet(2)
-                    matches = self.data.findSimilarPiece(toMatch)
+                    matches = self.data.findSimilarPiece(toMatch, mood)
 
                     # from the matches that match our mood select a random one by index
                     matchesIndex = matches.Moods.str.contains(mood)
@@ -214,9 +214,14 @@ class musicMain:
             self.UI.clearInput()
 
     def openMusicPlayer(self):
+        """
+        Sends an openStream command to the player object
+        """
 
         self.player.openStream()
 
     def closeMusicPlayer(self):
+        """
+        Sends a closeStream command to the player object
+        """
         self.player.closeStream()
-
