@@ -12,6 +12,8 @@ from theVision.detectionMain import detectionMain
 
 from thePlayer.musicMain import musicMain
 
+from theConductor.contextMain import contextMain
+
 from theGUI.main import guiMain
 
 if __name__ == "__main__":
@@ -29,14 +31,17 @@ if __name__ == "__main__":
     # music.openMusicPlayer()
     # music.openStream()
 
+    context = contextMain()
+    print(context.main("slowTravel", "conflictZone"))
+
     currentState = "Init"
 
     similar_pieces = music.data.findSimilarPiece(
-        "2 Legendes, S. 175 - I. St. Francois d' Assise, La predication aux oiseaux.flac_37.wav",
+        "Andantino 'Spring', B. 117.m4a_47.wav",
         "Chill",
     )
 
-    print(similar_pieces["FileNames"])
+    print(similar_pieces)
     # music.main("conflictZone")
 
     """

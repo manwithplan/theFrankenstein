@@ -53,13 +53,13 @@ class musicMain:
         # initiate a dict that links moods to gamestates. They mood keywords
         # will be ordered from most important to least important.
         self.moodToStateTranslator = {
-            "conflictZone": ["epic", "energetic", "dark", "scary"],
+            "conflictZone": ["epic", "dark", "scary"],
             "conflictDogFight": ["dark", "epic", "scary"],
-            "planetaryLanding": ["epic", "romantic", "spherical"],
-            "docking": ["chilled", "calm", "spherical"],
-            "travel": ["romantic", "spherical", "sad"],
-            "canyonRunning": ["energetic", "epic", "happy"],
-            "planetaryExploration": ["spherical", "dark"],
+            "planetaryLanding": ["epic", "romantic"],
+            "docking": ["chilled", "calm", ""],
+            "travel": ["romantic", "sad"],
+            "canyonRunning": ["energetic", "epic"],
+            "planetaryExploration": ["dark"],
             "slowTravel": ["sad", "chilled"],
             "None": [],
             "False": [],

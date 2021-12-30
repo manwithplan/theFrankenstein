@@ -29,7 +29,9 @@ class databaseMain:
         self.df_full = pd.read_csv(musicFullDataBaseURL)
         self.df_moods = pd.read_csv(musicMoodsDataBaseURL)
 
-    def findSimilarPiece(self, referencePiece, mood):
+    def findSimilarPiece(
+        self, referencePiece, mood, tempoChange=0, valenceChange=0, arousalChange=0
+    ):
 
         """
         method that combines data gathering with analysis and returns a name of a snippet that represents
@@ -37,10 +39,13 @@ class databaseMain:
 
         :referencePiece: string that represents the filename as it occurs in the full piece database
         :mood: string representing the mood we are currently looking for
+        :tempoChange: float representing the amount you want the tempo to change up or down
+        :valenceChange: float representing the amount the next match should change for valence
+        :arousalChange: float representing the amount the next match should change for arousal
         """
 
         # these weights allocate importance to the fidderent commonalities between the 2 snippets.
-        self.weights = [1.2, 1, 0.2]
+        self.weights = [1.2, 1, 0.2, 1, 1]
 
         # first step here is to gather all the relevant data via the 'gatherData' method.
         # Then it runs through each relevant parameter and finds close matches by several
@@ -61,6 +66,14 @@ class databaseMain:
             self.df_snippets["PrimaryKeys"].isin(matchesOrchestration)
         ]
 
+        # don't return matches for the same piece
+        matches = matches.loc[
+            matches["PrimaryKeys"] != self.referencePiece["PrimaryKey"]
+        ]
+
+        # use only matches that have valence and arousal values
+        matches = matches[matches["Valence"].notna()]
+
         # then we select all the snippets with the same dominant note (= musical key).
         matches = matches.loc[
             matches["DominantNoteMean"] == self.referencePiece["DominantNoteMean"]
@@ -74,16 +87,28 @@ class databaseMain:
         matches["commonCount"] = matches["Notes"].apply(
             lambda row: self.matchCounters(row)
         )
+
         matches["commonCountRatio"] = 1 - (
             matches["commonCount"] / matches["DensityNotes"]
         )
 
         # calculate the difference for the following analytics : TempoMean , NoisinessMedian
         matches["commonTempo"] = (
-            1 - (matches["TempoMean"] / self.referencePiece["TempoMean"])
+            1
+            - (matches["TempoMean"] / (self.referencePiece["TempoMean"] + tempoChange))
         ).abs()
+
         matches["commonNoisiness"] = (
             1 - (matches["NoisinessMedian"] / self.referencePiece["NoisinessMedian"])
+        ).abs()
+
+        # calculate similarities between the valence and arousal values
+        matches["commonValence"] = (
+            1 - (matches["Valence"] / (self.referencePiece["Valence"] + valenceChange))
+        ).abs()
+
+        matches["commonArousal"] = (
+            1 - (matches["Arousal"] / (self.referencePiece["Arousal"] + arousalChange))
         ).abs()
 
         # now calculate the sum of all the common data. The lower this number, the closer the match
@@ -91,6 +116,8 @@ class databaseMain:
             matches["commonCountRatio"] * self.weights[0]
             + matches["commonTempo"] * self.weights[1]
             + matches["commonNoisiness"] * self.weights[2]
+            + matches["commonValence"] * self.weights[3]
+            + matches["commonArousal"] * self.weights[4]
         ).abs()
 
         # the result is a list of the best matches to the reference piece.
@@ -124,10 +151,20 @@ class databaseMain:
 
         :matchByKey: int representing the SecondaryKeys entry in the database
         :mood: string representing which mood values to look for
-        :return: a list containing all representational values for the given mood
+        :return: a value representing the mood given for the piece specified by secondary key
         """
         row = self.df_snippets.loc[self.df_snippets["SecondaryKeys"] == matchByKey]
         return row[mood].values[0]
+
+    def gatherValenceAndArousal(self, matchByKey):
+        """
+        This function takes the n most similar matches as calculated in the function findSimilarPiece and gathers the mood values for it.
+
+        :matchByKey: int representing the SecondaryKeys entry in the database
+        :return: a list containing 2 float values representing Valence and Arousal scores
+        """
+        row = self.df_snippets.loc[self.df_snippets["SecondaryKeys"] == matchByKey]
+        return [row["Valence"].values[0], row["Arousal"].values[0]]
 
     def gatherSnippets(self, match):
         """
@@ -183,6 +220,8 @@ class databaseMain:
             "Notes": referenceLocationSnippet["Notes"].values[0],
             "UniqueNotes": referenceLocationSnippet["UniqueNotes"].values[0],
             "DominantNoteMean": referenceLocationSnippet["DominantNoteMean"].values[0],
+            "Valence": referenceLocationSnippet["Valence"].values[0],
+            "Arousal": referenceLocationSnippet["Arousal"].values[0],
         }
 
         referenceLocationFull = self.df_full.loc[
