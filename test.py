@@ -19,10 +19,5 @@ if __name__ == "__main__":
     # initializing the music module
     music = musicMain()
     music.openMusicPlayer()
-    music.openStream()
 
-    music.main("conflictZone")
-
-    time.sleep(2)
-
-    music.closeMusicPlayer()
+    print(music.main("Dark"))

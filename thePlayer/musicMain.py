@@ -1,3 +1,4 @@
+from fileinput import filename
 import keyboard
 import time
 import numpy as np
@@ -89,17 +90,24 @@ class musicMain:
 
                 if self.player.is_silent:
                     # In this case the player is not playing while we are looking for a match.
-                    # TODO describe strating points logic. For now I can start from just one piece.
+                    # TODO describe starting points logic. For now I can start from just one piece.
 
-                    self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3_1.wav"
-
-                    matches = self.data.findSimilarPiece(self.piece, mood)
+                    matches = self.data.findPieceByMood(mood)
 
                     if matches.empty:
                         raise KeyError
 
+                    # choose one sample at random
                     match = matches.sample()
                     matchedRow = matches.loc[match.index.values[0]]
+
+                    secondaryKey = str(int(matchedRow.PrimaryKeys)) + "_0000"
+                    matchedRow = self.data.df_snippets.loc[
+                        self.data.df_snippets.SecondaryKeys == secondaryKey
+                    ]
+
+                    if matchedRow.empty:
+                        raise KeyError
 
                     filenames = self.data.gatherSnippets(matchedRow)
                     self.player.writeToPipeline(filenames)

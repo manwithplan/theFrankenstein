@@ -1,6 +1,7 @@
 import pandas as pd
 import ast
 from collections import Counter
+import numpy as np
 
 from Settings.Settings import (
     rootURL,
@@ -29,6 +30,21 @@ class databaseMain:
         self.df_full = pd.read_csv(musicFullDataBaseURL)
         self.df_moods = pd.read_csv(musicMoodsDataBaseURL)
 
+    def findPieceByMood(self, mood):
+        """
+        This function will only be used when starting playback from a point where no music has been played yet.
+        It will take in a mood and return a matching piece that can be played from the start.
+
+        :mood: string representing the mood of the piece
+        :return: a dataframe containg data about pieces that match the given mood.
+        """
+
+        matches = self.df_snippets
+        matches = matches.loc[matches.ThirdKey < 25]
+        matches = matches[matches[mood].notna()]
+
+        return matches.sort_values(mood, ascending=False)[:250]
+
     def findSimilarPiece(
         self, referencePiece, mood, tempoChange=0, valenceChange=0, arousalChange=0
     ):
@@ -42,6 +58,7 @@ class databaseMain:
         :tempoChange: float representing the amount you want the tempo to change up or down
         :valenceChange: float representing the amount the next match should change for valence
         :arousalChange: float representing the amount the next match should change for arousal
+        :return: a dataframe containing possible matches to the reference piece
         """
 
         # these weights allocate importance to the fidderent commonalities between the 2 snippets.
