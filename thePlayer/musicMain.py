@@ -3,6 +3,7 @@ import time
 import numpy as np
 import ast
 import os
+import traceback
 
 from thePlayer.playerStream import playerStream
 from thePlayer.databaseMain import databaseMain
@@ -65,13 +66,6 @@ class musicMain:
             "False": [],
         }
 
-        # Currently still using this piece as the starting point.
-        self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
-        self.snippetFileNames = []
-
-        for x in range(1, 49):
-            self.snippetFileNames.append(self.piece + "_" + str(x) + ".wav")
-
     def openStream(self):
         self.player.writeToPipeline(self.snippetFileNames)
 
@@ -87,30 +81,44 @@ class musicMain:
 
         matchFound = False
 
-        # An attempt to find a match is done 3 times, if not, we will be returning None, and that will
+        # An attempt to find a match is made, if not, we will be returning None, and that will
         # be the flag to call the search method once more untill a match has been found.
         if not matchFound:
-            tries = 3
-            for i in range(tries):
-                try:
-                    moods = self.moodToStateTranslator[gameState].copy()
+            try:
+                mood = gameState
 
-                    # Take the first element in the possible moods, and look it up, then delete it from the list.
-                    mood = moods[i]
+                if self.player.is_silent:
+                    # In this case the player is not playing while we are looking for a match.
+                    # TODO describe strating points logic. For now I can start from just one piece.
+
+                    self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3_1.wav"
+
+                    matches = self.data.findSimilarPiece(self.piece, mood)
+
+                    if matches.empty:
+                        raise KeyError
+
+                    match = matches.sample()
+                    matchedRow = matches.loc[match.index.values[0]]
+
+                    filenames = self.data.gatherSnippets(matchedRow)
+                    self.player.writeToPipeline(filenames)
+
+                    matchFound = True
+                    return matchedRow["PrimaryKeys"]
+
+                else:
 
                     # from the pipeline of music currently played, get a snippet in the future.
                     # in this case 2 snippets from the current one being played.
                     toMatch = self.player.getFutureSnippet(2)
+
                     matches = self.data.findSimilarPiece(toMatch, mood)
 
-                    # from the matches that match our mood select a random one by index
-                    matchesIndex = matches.Moods.str.contains(mood)
-
-                    # Check if a result has been found, else raise an error.
-                    if matchesIndex.empty:
+                    if matches.empty:
                         raise KeyError
 
-                    match = matchesIndex.sample()
+                    match = matches.sample()
                     matchedRow = matches.loc[match.index.values[0]]
 
                     filenames = self.data.gatherSnippets(matchedRow)
@@ -119,18 +127,9 @@ class musicMain:
                     matchFound = True
                     return matchedRow["PrimaryKeys"]
 
-                except KeyError as e:
-                    if i < tries - 1:  # i is zero indexed
-                        print(e)
-                        continue
-                    else:
-                        pass
-
-                except IndexError as e:
-                    print(e)
-                    return None
-
-                break
+            except IndexError as e:
+                traceback.print_exc()
+                return None
 
     def manualMode(self):
         """

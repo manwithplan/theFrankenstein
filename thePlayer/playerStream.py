@@ -64,8 +64,15 @@ class playerStream:
                 duration=shutterSpeed * 1000, frame_rate=self.rate
             ).set_channels(2)
         ]
+
+        # The initialization of the pipelinenames is actually quite important for when music is being called, without any
+        # having been played. The reason is that a method named getFutureSnippets takes the name if a future snippet in
+        # the pipelinenames and finds similar pieces based on that. That's why a flag is made that registers if the
+        # music player is silent
         self.pipelineNames = []
         self.pipelineCounter = 0
+
+        self.is_silent = True
 
     def openStream(self):
         # initializing a pyaudio object and opening a media stream with variables populated by one of the snippets.
@@ -127,6 +134,8 @@ class playerStream:
         )
 
         self.pipelineNames = self.pipelineNames[: self.pipelineCounter + 4]
+
+        self.is_silent = True
 
     def fadeAndMix(self, fileNames, location=0):
         # the goal is to crossfade into a new piece of music. The basic mechanism is to delete the remaining snippets
@@ -198,6 +207,8 @@ class playerStream:
                 # by simply appending the 2 audioSegments to each other we can continue the playback seamless for as long as the pipeLine is not empty.
                 self.segment = self.segment + self.pipeline[self.pipelineCounter]
                 # print('next snippet loaded')
+                self.is_silent = False
+
             except Exception as e:
                 # this part of the callback function is responsible for not closing the stream when we are currently out of audio to play. It subtracts
                 # from the pipLineCounter variable what the last step added, and adds silence to the end of the segment we read from.
@@ -205,6 +216,7 @@ class playerStream:
                 # print('error : {}, silent running, length pipeline : {}, pipeline counter : {}'.format(e, len(self.pipeline), self.pipelineCounter))
                 self.pipelineCounter -= 1
                 self.segment = self.segment + pydub.AudioSegment.silent(duration=time)
+                self.is_silent = True
 
         return (data, pyaudio.paContinue)
 
@@ -241,4 +253,3 @@ class playerStream:
         self.rate = temp.frame_rate
 
         # print("FORMAT : {} - CHANNELS : {} - RATE : {}".format(self.format, self.channels, self.rate))
-

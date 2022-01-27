@@ -86,7 +86,7 @@ class contextMain:
         :gameStateOld: string representing former gameState
         :gameStateNew: string representing new gameState
         :PrimaryKey: int representing which piece has been played
-        :return: string representing mood to be played next OR boolean False in case no change to playback should be made
+        :return: string representing mood to be played next OR None in case no change to playback should be made
         """
 
         # first things first, store each tick.
@@ -104,7 +104,7 @@ class contextMain:
             else:
                 self.activityLevel = 1
 
-            mood = False
+            mood = None
 
         else:
             # else take note of the change in game state and store it.
@@ -124,10 +124,25 @@ class contextMain:
             # reset the tick counter
             self.ticksSinceChange = 0
 
-            # look up the next mood
-            x = self.detections.index(gameStateNew)
-            y = self.detections.index(gameStateOld)
-            mood = self.decisionMatrix[x][y][self.activityLevel]
+            try:
+                # look up the next mood
+                x = self.detections.index(gameStateNew)
+                y = self.detections.index(gameStateOld)
+                # the line below gets the mood corresponding to the new gamestate taking in context.
+                # from the decision matrix a list is retrieved, with the 3 closest moods that match,
+                # for the moment we only use the first one but TODO we can actually build in the logic
+                # to try the second element of the list if the first doesn't find any corresponding
+                # matches, from the similarity lookup.
+                mood = self.decisionMatrix[x][y][self.activityLevel][0]
+            except ValueError as e:
+
+                # There is a bad practice here, I am using the string "None" to represent no detection made.
+                # When I set the mood that is returned to the new gamestate, the 2 get tangled up, even though
+                # they both have a use. This is what I am solving below.
+                if gameStateNew == "None":
+                    mood = None
+                else:
+                    mood = gameStateNew
 
         return mood
 

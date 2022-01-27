@@ -1,6 +1,7 @@
 # import libraries
 import sys
 import time
+from types import new_class
 import keyboard
 from PySide6.QtWidgets import QApplication
 from queue import Queue
@@ -28,21 +29,16 @@ if __name__ == "__main__":
     """
     # initializing the music module
     music = musicMain()
-    # music.openMusicPlayer()
-    # music.openStream()
+    music.openMusicPlayer()
+    music.openStream()
 
     context = contextMain()
     print(context.main("slowTravel", "conflictZone"))
 
     currentState = "Init"
 
-    similar_pieces = music.data.findSimilarPiece(
-        "Andantino 'Spring', B. 117.m4a_47.wav",
-        "Chill",
-    )
-
-    print(similar_pieces)
-    # music.main("conflictZone")
+    newMusic = music.main("Dark")
+    print(newMusic)
 
     """
     while True:

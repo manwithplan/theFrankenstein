@@ -9,8 +9,8 @@ import cv2
 # import modules
 from theVision.visionMain import visionMain
 from theVision.detectionMain import detectionMain
-
 from thePlayer.musicMain import musicMain
+from theConductor.contextMain import contextMain
 
 from theGUI.main import guiMain
 
@@ -26,9 +26,12 @@ if __name__ == "__main__":
     # initializing the music module
     music = musicMain()
     music.openMusicPlayer()
-    music.openStream()
+    # music.openStream()
 
-    currentState = "Init"
+    # initializing the context module
+    context = contextMain()
+
+    currentState = "False"
 
     while True:
 
@@ -37,9 +40,15 @@ if __name__ == "__main__":
             screenshots = visionMain.q.get()
             detector.runDetection(screenshots)
 
-            if currentState != detector.gameStateAvg:
+            new_context = context.main(currentState, detector.gameStateAvg)
 
-                newMusic = music.main(detector.gameStateAvg)
+            if new_context is False:
+                currentState = detector.gameStateAvg
+
+            elif not isinstance(new_context, type(None)):
+
+                newMusic = music.main(new_context)
+                print(newMusic)
                 if newMusic:
                     currentState = detector.gameStateAvg
 

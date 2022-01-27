@@ -46,7 +46,6 @@ Beyond this 2 more tools have been built:
 
 ### varia
 
-
 Currentlty I can find these moods most often: 
 ['Dark','Chill','Epic','Scary','Ethereal','Calm','Sad','Romantic']
 
@@ -66,3 +65,4 @@ slowTravel => chilled, sad
 
 - Use different starting points for music, or code some logic that selects a new starting point. (musicMain line 68)
 - Use filter method to select by multiple possible moods. (musicMain line 91)
+- The different starting points could be some different pieces of music from where to start.
