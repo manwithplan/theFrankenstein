@@ -1,7 +1,6 @@
 # import libraries
 import sys
 import time
-from types import new_class
 import keyboard
 from PySide6.QtWidgets import QApplication
 from queue import Queue
@@ -10,37 +9,30 @@ import cv2
 # import modules
 from theVision.visionMain import visionMain
 from theVision.detectionMain import detectionMain
-
 from thePlayer.musicMain import musicMain
-
 from theConductor.contextMain import contextMain
 
 from theGUI.main import guiMain
 
 if __name__ == "__main__":
 
-    """
     # initiliazing theVision module to get screenshots from the game window.
     visionMain = visionMain()
     visionMain.main()
 
     # initializing the detection module
     detector = detectionMain()
-    """
+
     # initializing the music module
     music = musicMain()
     music.openMusicPlayer()
-    music.openStream()
+    # music.openStream()
 
+    # initializing the context module
     context = contextMain()
-    print(context.main("slowTravel", "conflictZone"))
 
-    currentState = "Init"
+    currentState = "False"
 
-    newMusic = music.main("Dark")
-    print(newMusic)
-
-    """
     while True:
 
         if visionMain.screenFound:
@@ -48,18 +40,38 @@ if __name__ == "__main__":
             screenshots = visionMain.q.get()
             detector.runDetection(screenshots)
 
-            if currentState != detector.gameStateAvg:
+            print(detector.gameStateAvg, end="\r")
+            if not isinstance(detector.preview, type(None)):
+                try:
+                    cv2.imshow("test", detector.preview)
+                    cv2.waitKey(1)
+                except:
+                    pass
 
-                newMusic = music.main(detector.gameStateAvg)
-                if newMusic:
+            """
+
+            new_context = context.main(currentState, detector.gameStateAvg)
+
+            if new_context is False:
+                currentState = detector.gameStateAvg
+
+            elif not isinstance(new_context, type(None)):
+
+                newMusic = music.main(new_context)
+                print(newMusic, end="\r")
+                if not isinstance(newMusic, type(None)):
                     currentState = detector.gameStateAvg
+
+            print(f" music : {newMusic} - gamestate : {currentState}", end="\r")
+
+            """
 
         if keyboard.is_pressed("q"):
             print("q")
             visionMain.stopThread()
             music.closeMusicPlayer()
             break
-    """
+
     """
     app = QApplication(sys.argv)
     main = guiMain()

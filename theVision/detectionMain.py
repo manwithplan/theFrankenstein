@@ -260,8 +260,10 @@ class detectionMain:
                 )
 
                 # running conflict detection algo:
-                _ = self.detectionConflict(
-                    self.cropWindow(self.inputRed, coordinatesConflict)
+                self.preview = self.detectionConflict(
+                    self.cropWindow(self.inputRed, coordinatesConflict),
+                    self.cropWindow(self.inputRed, coordinatesMiniMap),
+                    debugMode=True,
                 )
 
                 # running speed detection algo:
@@ -381,10 +383,8 @@ class detectionMain:
             # screenAngle calculates the angle to which the screen can be rotated to line everything up.
             screenAngle = ((avgLeft + avgRight) / 2) * 180 / 3.1415926 - 90
 
-            # print('avgLeft : {:.2f} - avgRight : {:.2f} - distance : {:.2f} - screenAngle : {:.2f}'.format(avgLeft, avgRight, avgRight - avgLeft, screenAngle))
-
             # implementing logic that makes the detection from the raw data
-            if avgDistance >= 0.3 and avgDistance <= 0.43:
+            if avgDistance >= 0.3 and avgDistance <= 0.5:
                 self.detectedHUD = True
             else:
                 self.detectedHUD = False
@@ -393,6 +393,11 @@ class detectionMain:
             self.detectedHUD = False
 
         if debugMode:
+            print(
+                "avgLeft : {:.2f} - avgRight : {:.2f} - distance : {:.2f} - screenAngle : {:.2f}".format(
+                    avgLeft, avgRight, avgRight - avgLeft, screenAngle
+                )
+            )
             return [inputImage, screenAngle]
 
         return [None, screenAngle]
@@ -444,18 +449,25 @@ class detectionMain:
 
         return None
 
-    def detectionConflict(self, inputImage, debugMode=False):
+    def detectionConflict(self, inputImage, inputImageNormalize, debugMode=False):
         # selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain
-        # threshold we can somewhat confidently say the player is engaging an enemy ship.
-
-        conflictThresholdMin = 5000
-        conflictThresholdMax = 11000
+        # threshold we can somewhat confidently say the player is engaging an enemy ship. The second input is there to
+        # normalize the general scale of red, because false positives are detected when in a certain angle of a sun.
 
         try:
 
-            zeros = cv2.countNonZero(inputImage)
+            zeros_in_area = cv2.countNonZero(inputImage)
+            zeros_in_test = cv2.countNonZero(inputImageNormalize)
 
-            if zeros > conflictThresholdMin and zeros < conflictThresholdMax:
+            if zeros_in_test > 20000:
+                conflictThresholdMin = 9000
+                conflictThresholdMax = 170000
+
+            else:
+                conflictThresholdMin = 5000
+                conflictThresholdMax = 110000
+
+            if zeros_in_area > conflictThresholdMin:
                 self.detectedConflict = True
             else:
                 self.detectedConflict = False
@@ -464,7 +476,12 @@ class detectionMain:
             pass
 
         if debugMode:
-            return inputImage
+
+            print(
+                f"zeros : {zeros_in_area} - test : {zeros_in_test} - ratio : {zeros_in_area/zeros_in_test}"
+            )
+
+            return inputImageNormalize
 
         return None
 

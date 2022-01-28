@@ -61,8 +61,3 @@ canyonRunning => epic
 planetaryExploration => dark, scary, calm
 slowTravel => chilled, sad
 
-### TODO
-
-- Use different starting points for music, or code some logic that selects a new starting point. (musicMain line 68)
-- Use filter method to select by multiple possible moods. (musicMain line 91)
-- The different starting points could be some different pieces of music from where to start.

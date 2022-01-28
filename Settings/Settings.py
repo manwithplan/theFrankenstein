@@ -25,6 +25,7 @@ musicMoodsDataBaseURL = os.path.join(rootURL, musicDBPath, "Cyanite.csv")
 shutterSpeed = 1  # the time between 2 imageGrabs
 
 # detection coordinates
+# topleft offset, height, topleft offset, width
 coordinatesHUD = [0.04, 0.36, 0.0, 1.0]
 coordinatesDocking = [0.65, 0.80, 0.40, 0.60]
 coordinatesConflict = [0.66, 0.95, 0.24, 0.38]

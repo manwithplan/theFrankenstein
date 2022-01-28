@@ -48,9 +48,15 @@ if __name__ == "__main__":
             elif not isinstance(new_context, type(None)):
 
                 newMusic = music.main(new_context)
-                print(newMusic)
-                if newMusic:
+                print(newMusic, end="\r")
+                if not isinstance(newMusic, type(None)):
                     currentState = detector.gameStateAvg
+
+                print(
+                    f" music : {newMusic} - gamestate : {currentState}"
+                    + "                     ",
+                    end="\r",
+                )
 
         if keyboard.is_pressed("q"):
             print("q")

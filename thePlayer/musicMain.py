@@ -90,7 +90,8 @@ class musicMain:
 
                 if self.player.is_silent:
                     # In this case the player is not playing while we are looking for a match.
-                    # TODO describe starting points logic. For now I can start from just one piece.
+                    # The starting point for the music takes a random piece that coheres highly
+                    # to the mood we are looking for and plays it from the start.
 
                     matches = self.data.findPieceByMood(mood)
 
