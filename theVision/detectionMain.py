@@ -189,7 +189,7 @@ class detectionMain:
         )
         HUDTime = time.time() - start_time
 
-        if self.detectedHUD:
+        if not self.detectedHUD:
 
             start_time = time.time()
             self.inputGreen = imutils.rotate(self.inputGreen, screenAngle)
@@ -260,10 +260,9 @@ class detectionMain:
                 )
 
                 # running conflict detection algo:
-                self.preview = self.detectionConflict(
+                _ = self.detectionConflict(
                     self.cropWindow(self.inputRed, coordinatesConflict),
                     self.cropWindow(self.inputRed, coordinatesMiniMap),
-                    debugMode=True,
                 )
 
                 # running speed detection algo:
@@ -282,16 +281,18 @@ class detectionMain:
                 )
 
                 # running proximity to minimap detection algo:
-                _ = self.detectionMiniMap(
+                self.preview = self.detectionMiniMap(
                     [
                         self.cropWindow(self.inputRed, coordinatesMiniMap),
                         self.cropWindow(self.inputWhite, coordinatesMiniMap),
-                    ]
+                    ],
+                    debugMode=True,
                 )
 
                 # running proximity to supercruise detection algo w time:
                 _ = self.detectionSupercruise(
-                    self.cropWindow(self.inputGray, coordinatesSupercruise)
+                    self.cropWindow(self.inputGray, coordinatesSupercruise),
+                    debugMode=True,
                 )
 
         self.stateLogic()
@@ -477,11 +478,14 @@ class detectionMain:
 
         if debugMode:
 
-            print(
-                f"zeros : {zeros_in_area} - test : {zeros_in_test} - ratio : {zeros_in_area/zeros_in_test}"
-            )
+            try:
+                print(
+                    f"zeros : {zeros_in_area} - test : {zeros_in_test} - ratio : {zeros_in_area/zeros_in_test}"
+                )
+            except ZeroDivisionError:
+                pass
 
-            return inputImageNormalize
+            return inputImage
 
         return None
 

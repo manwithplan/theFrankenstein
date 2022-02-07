@@ -9,29 +9,31 @@ matches one of the names.
 # temporary imports
 import win32gui
 
-class screenDetection():
-    def __init__(self):
+
+class screenDetection:
+    def __init__(self, screenName="Elite - Dangerous (CLIENT)"):
         super().__init__()
         self.screenOpen = False
         self.screenCoordinates = []
+        self.screenName = screenName
 
     def checkGameActive(self):
-        # the second part of this function calls the enumerator on the open windows, and first 
+        # the second part of this function calls the enumerator on the open windows, and first
         # gives the function to run on each one.
 
         def enumerationHandler(hwnd, ctx):
             # this function defines the functionality of what to do for each open window.
-            if win32gui.IsWindowVisible( hwnd ):
-                if "Elite - Dangerous (CLIENT)" in win32gui.GetWindowText( hwnd ):
+            if win32gui.IsWindowVisible(hwnd):
+                if self.screenName in win32gui.GetWindowText(hwnd):
                     self.screenOpen = True
-            
-        win32gui.EnumWindows( enumerationHandler, None )
+
+        win32gui.EnumWindows(enumerationHandler, None)
 
     def getScreenCoordinates(self):
         if self.screenOpen:
-            hwnd = win32gui.FindWindow(None, "Elite - Dangerous (CLIENT)")
+            hwnd = win32gui.FindWindow(None, self.screenName)
             self.screenCoordinates = win32gui.GetWindowRect(hwnd)
-            
+
             return self.screenCoordinates
 
         return None

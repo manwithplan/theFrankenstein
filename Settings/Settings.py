@@ -22,7 +22,7 @@ musicSnippetsDataBaseTagsURL = os.path.join(
 musicMoodsDataBaseURL = os.path.join(rootURL, musicDBPath, "Cyanite.csv")
 
 # global variables
-shutterSpeed = 1  # the time between 2 imageGrabs
+shutterSpeed = 0.05  # the time between 2 imageGrabs
 
 # detection coordinates
 # topleft offset, height, topleft offset, width

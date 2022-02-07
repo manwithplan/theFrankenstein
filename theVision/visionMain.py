@@ -21,7 +21,7 @@ from theVision.imageGrab import findScreen
 from theVision.imageConversion import imageConversion
 
 class visionMain():
-    def __init__(self):
+    def __init__(self, screenName = None):
         super().__init__()
         # global variables
         self.screenFound = False
@@ -34,7 +34,10 @@ class visionMain():
         self.t = None
 
         # detection variables
-        self.detector = screenDetection()
+        if not screenName:
+            self.detector = screenDetection()
+        else: 
+            self.detector = screenDetection(screenName = screenName)
         self.detectionRunning = True
         self.screenCoordinates = None
 
