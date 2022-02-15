@@ -1,6 +1,6 @@
 # The FrankenStein
 
-A music player that mixes existing pieces of music together to form an interactive score to the real world.
+A music player that mixes existing pieces of music together to form an interactive score generated on the fly.
 
 ### The Mixer
 
@@ -8,56 +8,47 @@ The mixer takes a piece in and looks through a database with relevant musical in
 - harmonic context
 - rhythmic context
 - mood analysis 
-- other datapoints, like valence, arousal, signal quality and instrumentation
-and finds a close match to mix into in less than a tenth of a second.
+- and other datapoints, like valence, arousal, signal quality and instrumentation
+and finds a close match to transition into in less than a tenth of a second.
 
 ### The Player
 
-Custom built PyAudio class that creates an audio stream playing back sound fragments and mixing them together
-as close to seamlessly as possible.
+Custom built PyAudio class that creates an audio stream playing back sound fragments and mixes them together
+as seamless as possible.
+
+It creates a silent stream when opened, that has the correct frame rate, format and channels, and using 
+PyAudio's inbuilt callback methods reads data from a pipeline.
+
+There are functions that control the mixing using fade-ins and fade-outs.
+
+### The Features
+
+All music is splitted down to segments as long as a bar, and on each of these a seperate analysis is performed. 
+This allows very localized information to be gathered and a very accurate similarity to be caculated.
+
+These features include, but are not limited to harmonic context like what notes are played, what chord is 
+played and what key the segment is in. Rhythmic context featureing beat onsets and tempo measurements local and
+local. MIR features like Valence and Arousal. And metadata like composer, instrumentation and audio Quality.
 
 ### The Moods
 
-All music has been analyzed beforehand by mood keywords, and these as entrypoints into the game dat is being scored to.
-In this case Elite: Dangerous.
+All music has been analyzed beforehand by mood keywords, and these are used as entrypoints into the game that
+is being scored to. In this case Elite: Dangerous. If there is a tense scene it will look for 'dark' or
+'epic' music. If not much is happening, it will be 'calm' or 'peaceful' music.
 
 A matrix is defined that defines in what way the music should change when going from one game state to another.
 
 ### The Changes
 
-The matrix looks like this:
+The matrix looks like this had in the x-axis the previous game state and on the y-axis the next game-state and 
+the content in the each looked-up cell holds information that controls the music by altering the similarity and
+mood searches.
 
-xx  CZ  CD  PL  DO  TR  CR  PE  ST  
-CZ  
-CD  
-PL  
-DO  
-TR  
-CR  
-PE  
-ST  
-
-x-axis : current game-state
-y-axis : new game-state
-
-Beyond this 2 more tools have been built:
+The matrix also takes into account the results of 2 more subsystems:
 1 : a location awareness system (time since player in gamestate, location in gaming session)
 2 : a context awareness system (mood matching current gamestate, musical activity recquired for that state) 
 
-### varia
+### The State
 
-Currentlty I can find these moods most often: 
-['Dark','Chill','Epic','Scary','Ethereal','Calm','Sad','Romantic']
-
-Now I have to link them to the actions in the game.
-['conflictZone', 'conflictDogFight', 'planetaryLanding', 'docking', 'travel', 'canyonRunning', 'planetaryExploration', 'slowTravel', 'Menu', 'False']
-
-conflictZone => epic, dark, scary
-conflictDogFight => epic, scary
-planetaryLanding => epic, romantic
-docking => chilled, calm
-travel => romantic, sad
-canyonRunning => epic
-planetaryExploration => dark, scary, calm
-slowTravel => chilled, sad
-
+The gamestate is extracted in theVision module, where the game screen is located, analyzed and a detection
+is made based an the combination of several different detection algorhithms combined.
