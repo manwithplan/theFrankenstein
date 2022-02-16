@@ -2,6 +2,59 @@
 
 A music player that mixes existing pieces of music together to form an interactive score generated on the fly.
 
+## Table of Contents
+1. [Description](#description)
+1. [Objectives](#objectives)
+	1. [Challenges](#challenges)
+	2. [Limitations](#limitations)
+	3. [Further developments](#further-developments)
+1. [Repo Architecture](#repo-architecture)
+1. [Installation](#installation)
+1. [Usage](#usage)
+1. [Visuals](#visuals)
+1. [Timeline](#timeline)
+1. [Personal situation](#personal-situation)
+
+## Repo Architecture
+```
+Project/
+|-- Settings/
+|   |-- loggins.conf
+|   |-- Settings.py
+|-- theConductor/
+|   |-- contextMain.py
+|-- theDB/
+|-- theGUI/
+|   |-- resources/
+|   |-- ui/
+|   |-- main.py
+|-- theMusic/
+|-- thePlayer/
+|   |-- databaseMain.py
+|   |-- musicMain.py
+|   |-- playerStream.py
+|-- theResources/
+|-- theTools/
+|   |-- debugMain.py
+|   |-- imageGrab.py
+|   |-- objectDetection.py
+|-- theUI/
+|   |-- basicUI.py
+|-- theVision/
+|   |-- detectionMain.py
+|   |-- imageConversion.py
+|   |-- screenDetection.py
+|   |-- visionMain.py
+|-- README.md
+|-- .gitignore
+|-- app.py
+```
+
+## Installation
+- Running this app requires a running version of **Elite: Dangerous**
+- Clone the repository and install the dependencies with `requirements.txt`
+- Run `app.py` to execute the script.
+
 ### The Mixer
 
 The mixer takes a piece in and looks through a database with relevant musical information on :
@@ -52,3 +105,5 @@ The matrix also takes into account the results of 2 more subsystems:
 
 The gamestate is extracted in theVision module, where the game screen is located, analyzed and a detection
 is made based an the combination of several different detection algorhithms combined.
+
+**[Back to top](#table-of-contents)**
