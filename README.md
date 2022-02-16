@@ -118,5 +118,5 @@ The source code uses the folowing libraries:
 - **Pandas** for data processing
 - **PySide6** for the GUI
 - **Numpy** for fun
-- 
+
 **[Back to top](#table-of-contents)**
