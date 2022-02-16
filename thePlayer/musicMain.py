@@ -1,3 +1,5 @@
+from typing import List, Set, Dict, Tuple, Optional, Union, Any, TypeVar
+import logging
 from fileinput import filename
 import keyboard
 import time
@@ -12,49 +14,78 @@ from theUI.basicUI import getInput
 
 
 class musicMain:
-
     """
+    musicMain builds the logic that selects the music to be played.
+    This module will take in commands from the user and select and write music to a queue.
 
-    Module for building the logic that selects the music to be played.
-    This module will take in commands from the urser and select and write music to a queue.
+    ...
+
+    Attributes
+    ----------
+    player : obj
+        playerStream object
+
+    data : obj
+        databaseMain object
+
+    Methods
+    -------
+    main():
+        Coördinates all music playback and database lookups.
+
+    manualMode():
+        Method used for testing functionality of music matching with user input rather that game input.
+
+    openMusicPlayer():
+        Sends an openStream command to the player object
+
+    closeMusicPlayer():
+        Sends a closeStream command to the player object
 
     Example commands :
+    -------
+    Write snippets to pipeline:
+        self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
+        self.snippetFileNames = []
 
-    self.piece = "Air on the G String (from Orchestral Suite no. 3, BWV 1068).mp3"
-            self.snippetFileNames = []
+        for x in range(1,49):
+                self.snippetFileNames.append( self.piece + "_" + str(x) + ".wav")
 
-            for x in range(1,49):
-                    self.snippetFileNames.append( self.piece + "_" + str(x) + ".wav")
+        self.piece2 = "Concerto Grosso no. 4, HWV 322- I. Larghetto affettuoso.flac"
+        self.snippetFileNames2 = []
 
-            self.piece2 = "Concerto Grosso no. 4, HWV 322- I. Larghetto affettuoso.flac"
-            self.snippetFileNames2 = []
+        for x in range(1,22):
+                self.snippetFileNames2.append( self.piece2 + "_" + str(x) + ".wav")
 
-            for x in range(1,22):
-                    self.snippetFileNames2.append( self.piece2 + "_" + str(x) + ".wav")
+    Fade and mix into a new list of filenames:
+        self.player.fadeAndMix( self.snippetFileNames2, location = 0 )
 
-    self.player.fadeAndMix( self.snippetFileNames2, location = 0 )
+    Fade and stop playback:
+        self.player.fadeAndStopPlayback()
 
-    self.player.fadeAndStopPlayback()
-
-    self.player.writeToPipeline( self.snippetFileNames )
+    Write new snippets to pipeline:
+        self.player.writeToPipeline( self.snippetFileNames )
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
+        # initalize logger object
+        self.logger: object = logging.getLogger(__name__)
+        self.logger.info("music main initialized")
 
         # flag is True when playback is actvie
-        self.playbackActive = False
+        self.playbackActive: bool = False
 
         # Create new custom pyaudio object, and open the stream.
-        self.player = playerStream()
+        self.player: object = playerStream()
 
         # create object of databaseclass.
-        self.data = databaseMain()
+        self.data: object = databaseMain()
 
         # initiate a dict that links moods to gamestates. They mood keywords
         # will be ordered from most important to least important.
-        self.moodToStateTranslator = {
+        self.moodToStateTranslator: Dict[str, List[str]] = {
             "conflictZone": ["epic", "dark", "scary"],
             "conflictDogFight": ["dark", "epic", "scary"],
             "planetaryLanding": ["epic", "romantic"],
@@ -67,10 +98,7 @@ class musicMain:
             "False": [],
         }
 
-    def openStream(self):
-        self.player.writeToPipeline(self.snippetFileNames)
-
-    def main(self, gameState):
+    def main(self, gameState: str) -> Union[None, TypeVar("pd.Series")]:
         """
         main method that coordinates all music playback and database lookups. It takes the game
         state and selects new music based on mood tags. This method is only called when a music
@@ -80,67 +108,88 @@ class musicMain:
         :return: None if no matches have been found, else the matched row from the database
         """
 
-        matchFound = False
+        self.logger.info(f"main method called - gamestate: {gameState}")
+
+        matchFound: bool = False
 
         # An attempt to find a match is made, if not, we will be returning None, and that will
         # be the flag to call the search method once more untill a match has been found.
         if not matchFound:
             try:
-                mood = gameState
+                mood: str = gameState
 
                 if self.player.is_silent:
                     # In this case the player is not playing while we are looking for a match.
                     # The starting point for the music takes a random piece that coheres highly
                     # to the mood we are looking for and plays it from the start.
 
-                    matches = self.data.findPieceByMood(mood)
+                    matches: TypeVar("pd.DataFrame") = self.data.findPieceByMood(mood)
 
                     if matches.empty:
                         raise KeyError
 
                     # choose one sample at random
-                    match = matches.sample()
-                    matchedRow = matches.loc[match.index.values[0]]
+                    match: TypeVar("pd.DataFrame") = matches.sample()
+                    matchedRow: TypeVar("pd.Series") = matches.loc[
+                        match.index.values[0]
+                    ]
 
-                    secondaryKey = str(int(matchedRow.PrimaryKeys)) + "_0000"
-                    matchedRow = self.data.df_snippets.loc[
+                    secondaryKey: str = str(int(matchedRow.PrimaryKeys)) + "_0000"
+                    matchedRow: TypeVar("pd.Series") = self.data.df_snippets.loc[
                         self.data.df_snippets.SecondaryKeys == secondaryKey
                     ]
 
                     if matchedRow.empty:
                         raise KeyError
 
-                    filenames = self.data.gatherSnippets(matchedRow)
+                    filenames: TypeVar("pd.Series") = self.data.gatherSnippets(
+                        matchedRow
+                    )
                     self.player.writeToPipeline(filenames)
 
-                    matchFound = True
+                    matchFound: bool = True
+
+                    # perform logging operations
+                    self.logger.debug(f"player silent: {self.player.is_silent}")
+                    self.logger.debug(f"matches found: {filenames}")
+
                     return matchedRow["PrimaryKeys"]
 
                 else:
 
                     # from the pipeline of music currently played, get a snippet in the future.
                     # in this case 2 snippets from the current one being played.
-                    toMatch = self.player.getFutureSnippet(2)
+                    toMatch: str = self.player.getFutureSnippet(2)
 
-                    matches = self.data.findSimilarPiece(toMatch, mood)
+                    matches: TypeVar("pd.DataFrame") = self.data.findSimilarPiece(
+                        toMatch, mood
+                    )
 
                     if matches.empty:
                         raise KeyError
 
-                    match = matches.sample()
-                    matchedRow = matches.loc[match.index.values[0]]
+                    match: TypeVar("pd.DataFrame") = matches.sample()
+                    matchedRow: TypeVar("pd.Series") = matches.loc[
+                        match.index.values[0]
+                    ]
 
                     filenames = self.data.gatherSnippets(matchedRow)
                     self.player.fadeAndMix(filenames, 0)
 
-                    matchFound = True
+                    matchFound: bool = True
+
+                    # perform logging operations
+                    self.logger.debug(f"player silent: {self.player.is_silent}")
+                    self.logger.debug(f"matches found: {filenames}")
+
                     return matchedRow["PrimaryKeys"]
 
             except IndexError as e:
-                traceback.print_exc()
+                # perform logging operations
+                self.logger.debug(f"matches found: None")
                 return None
 
-    def manualMode(self):
+    def manualMode(self) -> None:
         """
         method used for testing functionality of music matching with user input rather that game input.
         """
@@ -221,15 +270,23 @@ class musicMain:
 
             self.UI.clearInput()
 
-    def openMusicPlayer(self):
+    def openStream(self) -> None:
+        """
+        Open stream by writing the first snippets to the snippet filenames.
+        """
+        self.logger.info(f"openStream method called")
+        self.player.writeToPipeline(self.snippetFileNames)
+
+    def openMusicPlayer(self) -> None:
         """
         Sends an openStream command to the player object
         """
-
+        self.logger.info(f"openMusicPlayer method called")
         self.player.openStream()
 
-    def closeMusicPlayer(self):
+    def closeMusicPlayer(self) -> None:
         """
         Sends a closeStream command to the player object
         """
+        self.logger.info(f"openMusicPlayer method called")
         self.player.closeStream()

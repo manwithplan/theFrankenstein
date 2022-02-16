@@ -1,224 +1,405 @@
-"""
-
-this class contains the GUI.
-- : guiMain controls the sequence of screens.
-1: login contains the code for the first screen of the UI
-2: loginSplash containg code for the loading screen
-3: homeScreen contains the main screen, all the pages in the stackedWidget and implements the UI functionality of all the other implemented method.
-
-"""
-
-import sys
-import time
-import threading
+from typing import List, Set, Dict, Tuple, Optional, Union, Any
+import logging
 
 from Settings.Settings import rootURL
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QMainWindow
-from PySide6.QtCore import QFile, QIODevice, QObject, QTimer, QPropertyAnimation, QEasingCurve, QSize
+from PySide6.QtCore import (
+    QFile,
+    QIODevice,
+    QObject,
+    QTimer,
+    QPropertyAnimation,
+    QEasingCurve,
+    QSize,
+)
 from PySide6.QtGui import QIcon, QPixmap, QMovie
 
-## ==> GLOBALS
-counter = 0
+class guiMain:
+    """
+    A class to create and present a GUI.
 
-class guiMain():
-    def __init__(self):
+    ...
+
+    Attributes
+    ----------
+    gui : obj
+        object containg gui
+    logger : str
+        class specific GUI
+
+    Classes
+    -------
+    guiMain
+        controls the sequencing of the screens.
+    login
+        contains the first login screen for e-mail and password
+    loginSplash
+        contains the loading screen during authentication
+    homeScreen
+        Main GUI screen containing all sub-menu's and data.
+
+    Methods
+    -------
+    setExternalFunctions(function):
+        Allows for using external functions as triggers in the GUI
+
+    openLogin():
+        callback function for loading the login window
+
+    openLoginSplash():
+        callback function for loading the splash window
+
+    openMain():
+        callback function for loading the main window
+
+    """
+
+    def __init__(self) -> None:
         super().__init__()
-        self.gui = None
+        self.gui: object = None
+        self.logger: object = logging.getLogger(__name__)
 
-    def setExternalFunctions(self, detectGameWindow):
-        self.detectGameWindow = detectGameWindow
+    def setExternalFunctions(self, detectGameWindow) -> None:
+        """
+        Loading an external function to detect Game Window into the GUI functionality
+        """
+        self.detectGameWindow: object = detectGameWindow
 
-    def openLogin(self):
-        self.gui = login(self.openLoginSplash)
+    def openLogin(self) -> None:
+        """
+        Loads Login screen
+        """
+        self.gui = self.login(self.openLoginSplash)
 
-    def openLoginSplash(self):
-        self.gui = loginSplash(self.openMain)
+    def openLoginSplash(self) -> None:
+        """
+        Loads Login Splash screen
+        """
+        self.gui = self.loginSplash(self.openMain)
 
-    def openMain(self):
-        self.gui = homeScreen(self.detectGameWindow)
+    def openMain(self) -> None:
+        """
+        Loads Main Screen
+        """
+        self.gui = self.homeScreen(self.detectGameWindow)
 
-class login(QObject):
+    class login(QObject):
+        """
+        GUI element for the login screen. Inherits from GObject class
 
-    def __init__(self, nextWindow, ui_file = rootURL + r"\theGUI\ui\LogInScreen.ui", parent=None):
-        super(login, self).__init__(parent)
+        ...
 
-        self.nextWindow = nextWindow
+        Attributes
+        ----------
+        name : obj
+            placeholder for user name input
+        password : str
+            placeholder for user password input
+        btn : PyQT obj
+            button on the GUI screen
 
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly)
+        Methods
+        -------
+        connectHandler():
+            Function that gets called when clicking "login" button.
 
-        loader = QUiLoader()
-        self.login = loader.load(ui_file)
-        ui_file.close()
-        
-        self.name = self.login.findChild(QLineEdit, 'line_Name')
-        self.password = self.login.findChild(QLineEdit, 'line_Password')
-        
-        btn = self.login.findChild(QPushButton, 'button_SignIn')
-        btn.clicked.connect(self.connectHandler)
-        self.login.show()
-
-    def connectHandler(self):
-        name = 'None' if not self.name.text() else self.name.text()
-        password = 'None' if not self.password.text() else self.password.text()
-
-        #print('login: {} - {}'.format(name, password))
-
-        self.login.close()
-        self.nextWindow()
-
-class loginSplash(QObject):
-
-    def __init__(self, nextWindow, ui_file = rootURL + r"\theGUI\ui\LogInSplash.ui", parent=None):
-        super(loginSplash, self).__init__(parent)
-
-        self.nextWindow = nextWindow
-
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly)
-
-        loader = QUiLoader()
-        self.loginSplash = loader.load(ui_file)
-        ui_file.close()
-
-        self.progressBarValue(0)
-
-        ## QTIMER ==> START
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.progress)
-        # TIMER IN MILLISECONDS
-        self.timer.start(35)
-        
-        self.loginSplash.show()
-
-    def progress(self):
-
-        global counter
-
-        # SET VALUE TO PROGRESS BAR
-        self.progressBarValue(counter)
-
-        # CLOSE SPLASH SCREE AND OPEN APP
-        if counter > 100:
-            # STOP TIMER
-            self.timer.stop()
-
-            # SHOW MAIN WINDOW
-            #self.main = MainWindow()
-            #self.main.show()
-
-            # CLOSE SPLASH SCREEN
-            self.loginSplash.close()
-            self.nextWindow()
-
-        # INCREASE COUNTER
-        counter += 2
-
-    def progressBarValue(self, value):
-
-        styleSheet = """
-        QFrame{
-            border-radius: 75px;
-            background-color: qconicalgradient(cx:0.5, cy:0.5, angle:90, stop:{STOP_1} rgba(0, 0, 0, 0), stop:{STOP_2} rgba(81, 183, 187, 255));
-        }
         """
 
-        progress = (100 - value) / 100.0
+        def __init__(
+            self,
+            nextWindow,
+            ui_file=rootURL + r"\theGUI\ui\LogInScreen.ui",
+            parent=None,
+        ) -> None:
+            super(self.login, self).__init__(parent)
 
-        stop_1 = str(progress - 0.001)
-        stop_2 = str(progress)
+            self.nextWindow: object = nextWindow
 
-        newStyleSheet = styleSheet.replace("{STOP_1}", stop_1).replace("{STOP_2}", stop_2)
+            ui_file: object = QFile(ui_file)
+            ui_file.open(QFile.ReadOnly)
 
-        self.loginSplash.circularProgress.setStyleSheet(newStyleSheet)
+            loader: object = QUiLoader()
+            self.login: object = loader.load(ui_file)
+            ui_file.close()
 
-class homeScreen(QObject):
+            self.name: object = self.login.findChild(QLineEdit, "line_Name")
+            self.password: object = self.login.findChild(QLineEdit, "line_Password")
 
-    def __init__(self,  detectGameWindow, ui_file = rootURL + r"\theGUI\ui\HomeScreen.ui", parent=None):
-        super(homeScreen, self).__init__(parent)
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly)
+            btn: object = self.login.findChild(QPushButton, "button_SignIn")
+            btn.clicked.connect(self.connectHandler)
+            self.login.show()
 
-        loader = QUiLoader()
-        self.homeScreen = loader.load(ui_file)
-        ui_file.close()
+            self.logger.info("login window activated")
 
-        ### initialize all external methods
-        self.detectGameWindow = detectGameWindow
-        
-        ### initialize all media
+        def connectHandler(self) -> None:
+            """
+            Function that gets called when login button is called. It gathers the user
+            inputted name and password and pretends to login.
+            """
+            name: object = "None" if not self.name.text() else self.name.text()
+            password: object = (
+                "None" if not self.password.text() else self.password.text()
+            )
 
-        # mainPage buttons
-        self.homeScreen.toggleButton.setIcon(QIcon(rootURL + r"\theGUI\resources\icons\cil-menu.png"))
+            self.logger.info("login attempt for name: {name} and password:  {password}")
 
-        # accountPage buttons
-        self.homeScreen.userImage.setPixmap(QPixmap(rootURL + r"\theGUI\resources\icons\cil-user.png"))
-        self.homeScreen.statusCheck.setPixmap(QPixmap(rootURL + r"\theGUI\resources\icons\cil-check-circle.png"))
-        self.homeScreen.gameIcon.setPixmap(QPixmap(rootURL + r"\theGUI\resources\icons\cil-gamePad.png"))
-        self.homeScreen.game1Image.setPixmap(QPixmap(rootURL + r"\theGUI\resources\icons\elite-dangerous.png"))
+            self.login.close()
+            self.nextWindow()
 
-        # load activeIcon to frame
-        iconActive = QPixmap(rootURL + r"\theGUI\resources\icons\activeLit.png")
-        self.homeScreen.labelActive0.setPixmap(iconActive)
-        self.homeScreen.labelActive0.setScaledContents(True)
-       
-        # set up buttons
-        btn = self.homeScreen.findChild(QPushButton, 'toggleButton')
-        btn.clicked.connect(lambda: self.toggleHandler(50, True))
+    class loginSplash(QObject):
+        """
+        GUI element for the login Splash screen. Inherits from GObject class.
+        It shows a loading icon and pretends to communicate with the server.
 
-        # set up pages and corresponding button
-        self.homeScreen.homePages.setCurrentWidget(self.homeScreen.homePage)
+        ...
 
-        self.homeScreen.btnMain.clicked.connect(lambda: self.homeScreen.homePages.setCurrentWidget(self.homeScreen.homePage))
-        self.homeScreen.btnAccount.clicked.connect(lambda: self.homeScreen.homePages.setCurrentWidget(self.homeScreen.accountPage))
-        self.homeScreen.btnSettings.clicked.connect(lambda: self.homeScreen.homePages.setCurrentWidget(self.homeScreen.settingsPage))
+        Attributes
+        ----------
+        loader : PyQT obj
+            Custom PyQT loader object
+        timer : PyQT str
+            timer keeps track of progress
 
-        ### show the screen
-        self.homeScreen.show()
+        Methods
+        -------
+        progress():
+            Function that increments the counter variable.
 
-    def toggleHandler(self, maxWidth, enable):
-        def showIcon():
+        progressBarValue():
+            Function that creates the login icon and increments it.
 
-            if widthExtended == maxExtend:
+        """
 
-                # make pushbutton icons appear when folding menu out.
-                self.homeScreen.btnMain.setIcon(QIcon(rootURL + r"\theGUI\resources\icons\cil-home.png"))
-                self.homeScreen.btnAccount.setIcon(QIcon(rootURL + r"\theGUI\resources\icons\cil-user.png"))
-                self.homeScreen.btnSettings.setIcon(QIcon(rootURL + r"\theGUI\resources\icons\cil-settings.png"))
-        
-        def hideIcon():
+        def __init__(
+            self,
+            nextWindow,
+            ui_file=rootURL + r"\theGUI\ui\LogInSplash.ui",
+            parent=None,
+        ) -> None:
+            super(self.loginSplash, self).__init__(parent)
 
-            if widthExtended == barStandardWidth:
-                # make the pushbutton dissapeasr when folding in
-                self.homeScreen.btnMain.setIcon(QIcon(QPixmap()))
-                self.homeScreen.btnAccount.setIcon(QIcon(QPixmap()))
-                self.homeScreen.btnSettings.setIcon(QIcon(QPixmap()))
+            self.nextWindow = nextWindow
 
-        if enable: 
+            ui_file = QFile(ui_file)
+            ui_file.open(QFile.ReadOnly)
 
-            # get width
-            barWidth = self.homeScreen.menuBtnBar.width()
-            maxExtend = maxWidth
-            barStandardWidth = 10
+            loader = QUiLoader()
+            self.loginSplash = loader.load(ui_file)
+            ui_file.close()
 
-            # set max width
-            if barWidth == barStandardWidth:
-                widthExtended = maxExtend
+            self.progressBarValue(0)
 
-            else:
-                widthExtended = barStandardWidth
-                hideIcon()
+            ## QTIMER ==> START
+            self.timer: object = QTimer()
+            self.timer.timeout.connect(self.progress)
+            # TIMER IN MILLISECONDS
+            self.timer.start(35)
 
-            # animation of the menubar size.
-            self.animation = QPropertyAnimation(self.homeScreen.menuBtnBar, b"minimumWidth")
-            self.animation.setDuration(400)
-            self.animation.setStartValue(barWidth)
-            self.animation.setEndValue(widthExtended)
-            self.animation.setEasingCurve(QEasingCurve.InOutQuart)
-            self.animation.start()
-            
-            self.animation.finished.connect(lambda: showIcon())
+            self.loginSplash.show()
 
+        def progress(self) -> None:
+            """
+            Keeps track of the counter variable that increments to 100, and communicates
+            this value with the progress bar method..
+            """
 
+            # SET VALUE TO PROGRESS BAR
+            self.progressBarValue(self.counter)
+
+            # CLOSE SPLASH SCREE AND OPEN APP
+            if self.counter > 100:
+                # STOP TIMER
+                self.timer.stop()
+
+                # SHOW MAIN WINDOW
+                # self.main = MainWindow()
+                # self.main.show()
+
+                # CLOSE SPLASH SCREEN
+                self.loginSplash.close()
+                self.nextWindow()
+
+            # INCREASE COUNTER
+            self.counter += 2
+
+        def progressBarValue(self, value) -> None:
+            """
+            function that updates the Counter value with the progress bar.
+
+            :value: int representing progress
+            """
+
+            styleSheet = """
+            QFrame{
+                border-radius: 75px;
+                background-color: qconicalgradient(cx:0.5, cy:0.5, angle:90, stop:{STOP_1} rgba(0, 0, 0, 0), stop:{STOP_2} rgba(81, 183, 187, 255));
+            }
+            """
+
+            progress: float = (100 - value) / 100.0
+
+            stop_1 = str(progress - 0.001)
+            stop_2 = str(progress)
+
+            newStyleSheet = styleSheet.replace("{STOP_1}", stop_1).replace(
+                "{STOP_2}", stop_2
+            )
+
+            self.loginSplash.circularProgress.setStyleSheet(newStyleSheet)
+
+    class homeScreen(QObject):
+        """
+        GUI element for the main screen. Inherits from GObject class.
+        allow navigation between user, settings and main menu
+        and features status updates of the app.
+
+        ...
+
+        Attributes
+        ----------
+        btn : PyQT obj
+            button for togging menu on and off
+        homescreen : PyQT obj
+            placeholder for the differen sub-menu's of the GUI
+
+        Methods
+        -------
+        toggleHandler():
+            Function that shows or hides the sidebar when it is clicked.
+
+        """
+
+        def __init__(
+            self,
+            detectGameWindow: object,
+            ui_file: str = rootURL + r"\theGUI\ui\HomeScreen.ui",
+            parent=None,
+        ) -> None:
+            super(self.homeScreen, self).__init__(parent)
+            ui_file: object = QFile(ui_file)
+            ui_file.open(QFile.ReadOnly)
+
+            loader: object = QUiLoader()
+            self.homeScreen: object = loader.load(ui_file)
+            ui_file.close()
+
+            ### initialize all external methods
+            self.detectGameWindow = detectGameWindow
+
+            ### initialize all media
+
+            # mainPage buttons
+            self.homeScreen.toggleButton.setIcon(
+                QIcon(rootURL + r"\theGUI\resources\icons\cil-menu.png")
+            )
+
+            # accountPage buttons
+            self.homeScreen.userImage.setPixmap(
+                QPixmap(rootURL + r"\theGUI\resources\icons\cil-user.png")
+            )
+            self.homeScreen.statusCheck.setPixmap(
+                QPixmap(rootURL + r"\theGUI\resources\icons\cil-check-circle.png")
+            )
+            self.homeScreen.gameIcon.setPixmap(
+                QPixmap(rootURL + r"\theGUI\resources\icons\cil-gamePad.png")
+            )
+            self.homeScreen.game1Image.setPixmap(
+                QPixmap(rootURL + r"\theGUI\resources\icons\elite-dangerous.png")
+            )
+
+            # load activeIcon to frame
+            iconActive = QPixmap(rootURL + r"\theGUI\resources\icons\activeLit.png")
+            self.homeScreen.labelActive0.setPixmap(iconActive)
+            self.homeScreen.labelActive0.setScaledContents(True)
+
+            # set up buttons
+            btn = self.homeScreen.findChild(QPushButton, "toggleButton")
+            btn.clicked.connect(lambda: self.toggleHandler(50, True))
+
+            # set up pages and corresponding button
+            self.homeScreen.homePages.setCurrentWidget(self.homeScreen.homePage)
+
+            self.homeScreen.btnMain.clicked.connect(
+                lambda: self.homeScreen.homePages.setCurrentWidget(
+                    self.homeScreen.homePage
+                )
+            )
+            self.homeScreen.btnAccount.clicked.connect(
+                lambda: self.homeScreen.homePages.setCurrentWidget(
+                    self.homeScreen.accountPage
+                )
+            )
+            self.homeScreen.btnSettings.clicked.connect(
+                lambda: self.homeScreen.homePages.setCurrentWidget(
+                    self.homeScreen.settingsPage
+                )
+            )
+
+            ### show the screen
+            self.homeScreen.show()
+
+        def toggleHandler(self, maxWidth: int, enable: bool) -> None:
+            """
+            Functions that controls the extension of the sidebar's menu and icons.
+
+            :maxWidth: int representing width of the sidebar
+            :enable: boolean flag representing opened or closed state.
+            """
+
+            def showIcon():
+                """
+                function for extending the sidebar menu
+                """
+
+                if widthExtended == maxExtend:
+
+                    # make pushbutton icons appear when folding menu out.
+                    self.homeScreen.btnMain.setIcon(
+                        QIcon(rootURL + r"\theGUI\resources\icons\cil-home.png")
+                    )
+                    self.homeScreen.btnAccount.setIcon(
+                        QIcon(rootURL + r"\theGUI\resources\icons\cil-user.png")
+                    )
+                    self.homeScreen.btnSettings.setIcon(
+                        QIcon(rootURL + r"\theGUI\resources\icons\cil-settings.png")
+                    )
+
+            def hideIcon():
+                """
+                Function for inclining the sidebar menu
+                """
+
+                if widthExtended == barStandardWidth:
+                    # make the pushbutton dissapeasr when folding in
+                    self.homeScreen.btnMain.setIcon(QIcon(QPixmap()))
+                    self.homeScreen.btnAccount.setIcon(QIcon(QPixmap()))
+                    self.homeScreen.btnSettings.setIcon(QIcon(QPixmap()))
+
+            if enable:
+
+                # get width
+                barWidth = self.homeScreen.menuBtnBar.width()
+                maxExtend = maxWidth
+                barStandardWidth = 10
+
+                # set max width
+                if barWidth == barStandardWidth:
+                    widthExtended = maxExtend
+
+                else:
+                    widthExtended = barStandardWidth
+                    hideIcon()
+
+                # animation of the menubar size.
+                self.animation: object = QPropertyAnimation(
+                    self.homeScreen.menuBtnBar, b"minimumWidth"
+                )
+                self.animation.setDuration(400)
+                self.animation.setStartValue(barWidth)
+                self.animation.setEndValue(widthExtended)
+                self.animation.setEasingCurve(QEasingCurve.InOutQuart)
+                self.animation.start()
+
+                self.animation.finished.connect(lambda: showIcon())

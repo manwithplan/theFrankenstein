@@ -2,6 +2,8 @@ import pandas as pd
 import ast
 from collections import Counter
 import numpy as np
+from typing import List, Set, Dict, Tuple, Optional, Union, Any, TypeVar
+import logging
 
 from Settings.Settings import (
     rootURL,
@@ -14,23 +16,41 @@ from Settings.Settings import (
 
 
 class databaseMain:
-
     """
     DatabaseMain module is responsible for looking up pieces of music by similarity
     from the .csv files containing the results of prior Music Information
     Retrieval.
 
+    ...
+
+    Attributes
+    ----------
+    btn : PyQT obj
+        button for togging menu on and off
+    homescreen : PyQT obj
+        placeholder for the differen sub-menu's of the GUI
+
+    Methods
+    -------
+    toggleHandler():
+        Function that shows or hides the sidebar when it is clicked.
+
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        # initialize logger
+        self.logger: object = logging.getLogger(__name__)
+        self.logger.info("database main initialized")
 
-        self.referencePiece = {}
+        self.referencePiece: Dict[str, Union[str, int]] = {}
 
-        self.df_snippets = pd.read_csv(musicSnippetsDataBaseTagsURL, index_col=0)
-        self.df_full = pd.read_csv(musicFullDataBaseURL)
-        self.df_moods = pd.read_csv(musicMoodsDataBaseURL)
+        self.df_snippets: TypeVar("pd.DataFrame") = pd.read_csv(
+            musicSnippetsDataBaseTagsURL, index_col=0
+        )
+        self.df_full: TypeVar("pd.DataFrame") = pd.read_csv(musicFullDataBaseURL)
+        self.df_moods: TypeVar("pd.DataFrame") = pd.read_csv(musicMoodsDataBaseURL)
 
-    def findPieceByMood(self, mood):
+    def findPieceByMood(self, mood: str) -> TypeVar("pd.DataFrame"):
         """
         This function will only be used when starting playback from a point where no music has been played yet.
         It will take in a mood and return a matching piece that can be played from the start.
@@ -39,15 +59,23 @@ class databaseMain:
         :return: a dataframe containg data about pieces that match the given mood.
         """
 
-        matches = self.df_snippets
+        matches: TypeVar("pd.DataFrame") = self.df_snippets
         matches = matches.loc[matches.ThirdKey < 25]
         matches = matches[matches[mood].notna()]
+
+        self.logger.info(f"findPieceByMood called - mood: {mood}")
+        self.logger.debug(f"findPieceByMood called - returns: {matches}")
 
         return matches.sort_values(mood, ascending=False)[:250]
 
     def findSimilarPiece(
-        self, referencePiece, mood, tempoChange=0, valenceChange=0, arousalChange=0
-    ):
+        self,
+        referencePiece: str,
+        mood: str,
+        tempoChange: int = 0,
+        valenceChange: int = 0,
+        arousalChange: int = 0,
+    ) -> TypeVar("pd.DataFrame"):
 
         """
         method that combines data gathering with analysis and returns a name of a snippet that represents
@@ -62,7 +90,7 @@ class databaseMain:
         """
 
         # these weights allocate importance to the fidderent commonalities between the 2 snippets.
-        self.weights = [1.2, 1, 0.2, 1, 1]
+        self.weights: List[float] = [1.2, 1, 0.2, 1, 1]
 
         # first step here is to gather all the relevant data via the 'gatherData' method.
         # Then it runs through each relevant parameter and finds close matches by several
@@ -99,7 +127,9 @@ class databaseMain:
         # then we match the occurance of notes between the reference piece and the previous matches
         # giving us a number. The higher the number, the more matches. But it doesn't take into account
         # that some pieces simply have more notes than others so a normalization is made:
-        self.notesRef = Counter(ast.literal_eval(self.referencePiece["Notes"]))
+        self.notesRef: TypeVar("Counter") = Counter(
+            ast.literal_eval(self.referencePiece["Notes"])
+        )
 
         matches["commonCount"] = matches["Notes"].apply(
             lambda row: self.matchCounters(row)
@@ -138,7 +168,7 @@ class databaseMain:
         ).abs()
 
         # the result is a list of the best matches to the reference piece.
-        finalMatches = matches.nsmallest(20, "commonRatio")
+        finalMatches: TypeVar("pd.DataFrame") = matches.nsmallest(20, "commonRatio")
         finalMatches = finalMatches.iloc[1:, :]
 
         # here I will now write some code that gathers the moods of the music in order to give the user/program
@@ -148,10 +178,10 @@ class databaseMain:
         finalMatches["Moods"] = ""
 
         # make a new list that can store the mood representation values themselves.
-        moodValues = []
+        moodValues: List[str, str] = []
 
         # iterate over rows in the finalmatches and lookup the values in the database.
-        for index, row in finalMatches.iterrows():
+        for _, row in finalMatches.iterrows():
             key = row["SecondaryKeys"]
             moodVal = self.gatherMoods(key, mood)
             moodValues.append(moodVal)
@@ -159,10 +189,20 @@ class databaseMain:
         # write the moods to the newly created column.
         finalMatches["Moods"] = moodValues
 
+        # perform logging operations
+        self.logger.info(
+            f"findSimilarPiece called - referencePiece: {referencePiece} and mood: {mood}"
+        )
+        self.logger.debug(
+            f"findSimilarPiece called - tempoChange: {tempoChange}, valenceChange: {valenceChange}, arousalChange: {arousalChange}"
+        )
+        if len(finalMatches) == 0:
+            self.logger.warning(f"no matches found")
+
         # return the potential matches, sorted from high mood awareness to low.
         return finalMatches.sort_values("Moods", ascending=False)
 
-    def gatherMoods(self, matchByKey, mood):
+    def gatherMoods(self, matchByKey: int, mood: str) -> TypeVar("pd.Series"):
         """
         This function takes the n most similar matches as calculated in the function findSimilarPiece and gathers the mood values for it.
 
@@ -170,20 +210,34 @@ class databaseMain:
         :mood: string representing which mood values to look for
         :return: a value representing the mood given for the piece specified by secondary key
         """
-        row = self.df_snippets.loc[self.df_snippets["SecondaryKeys"] == matchByKey]
+        row: TypeVar("pd.Series") = self.df_snippets.loc[
+            self.df_snippets["SecondaryKeys"] == matchByKey
+        ]
+
+        # perform logging operations
+        self.logger.info(
+            f"gatherMoods called - matchByKey: {matchByKey} and mood: {mood}"
+        )
+
         return row[mood].values[0]
 
-    def gatherValenceAndArousal(self, matchByKey):
+    def gatherValenceAndArousal(self, matchByKey: int) -> List[float]:
         """
         This function takes the n most similar matches as calculated in the function findSimilarPiece and gathers the mood values for it.
 
         :matchByKey: int representing the SecondaryKeys entry in the database
         :return: a list containing 2 float values representing Valence and Arousal scores
         """
-        row = self.df_snippets.loc[self.df_snippets["SecondaryKeys"] == matchByKey]
+        row: TypeVar("pd.Series") = self.df_snippets.loc[
+            self.df_snippets["SecondaryKeys"] == matchByKey
+        ]
+
+        # perform logging operations
+        self.logger.info(f"gatherValenceAndArousal called - matchByKey: {matchByKey}")
+
         return [row["Valence"].values[0], row["Arousal"].values[0]]
 
-    def gatherSnippets(self, match):
+    def gatherSnippets(self, match: str) -> List[str]:
         """
         For a given snippet, get all the filenames that come after it in the correct order.
 
@@ -191,17 +245,17 @@ class databaseMain:
         :returns: list that contains strings representing filenames of snippets as found in the snippet database
         """
 
-        matchedSnippets = []
+        matchedSnippets: List[str] = []
 
         # from this list we want to gather all the filenames of the snippets that follow our match and gather them in a list.
         try:
-            matchedSecondaryKey = match["SecondaryKeys"].item()
+            matchedSecondaryKey: str = match["SecondaryKeys"].item()
         except AttributeError:
-            matchedSecondaryKey = match["SecondaryKeys"]
+            matchedSecondaryKey: str = match["SecondaryKeys"]
 
-        lookupKey = int(matchedSecondaryKey[-4:])
+        lookupKey: int = int(matchedSecondaryKey[-4:])
 
-        total = match["TotalSnippets"].item()
+        total: int = match["TotalSnippets"].item()
 
         # get all the snippets following the match we found
         for number in range(lookupKey, total):
@@ -213,9 +267,14 @@ class databaseMain:
             ]
             matchedSnippets.append(snippetToWrite["FileNames"].item())
 
+        # perform logging operations
+        self.logger.info(f"gatherSnippets called - match: {match}")
+        if matchedSnippets == 0:
+            self.logger.warning(f"gatherSnippets called - no snippets found")
+
         return matchedSnippets
 
-    def gatherData(self, referencePiece):
+    def gatherData(self, referencePiece: str) -> None:
 
         """
         Gathers all relevant columns from the different databases and aggregates them in
@@ -224,10 +283,10 @@ class databaseMain:
         :referencePiece: string reference to the filename as it is found in the snippet database
         """
 
-        referenceLocationSnippet = self.df_snippets.loc[
+        referenceLocationSnippet: TypeVar("pd.DataFrame") = self.df_snippets.loc[
             self.df_snippets["FileNames"] == referencePiece
         ]
-        self.referencePiece = {
+        self.referencePiece: Dict[str, Union[str, int]] = {
             "filename": referencePiece,
             "PrimaryKey": referenceLocationSnippet["PrimaryKeys"].values[0],
             "Duration": referenceLocationSnippet["Duration"].values[0],
@@ -241,14 +300,19 @@ class databaseMain:
             "Arousal": referenceLocationSnippet["Arousal"].values[0],
         }
 
-        referenceLocationFull = self.df_full.loc[
+        referenceLocationFull: TypeVar("pd.DataFrame") = self.df_full.loc[
             self.df_full["PrimaryKey"] == self.referencePiece["PrimaryKey"]
         ]
+
         self.referencePiece["Instrument"] = referenceLocationFull["Instrument"].values[
             0
         ]
 
-    def matchCounters(self, toMatch):
+        # perform logging operations
+        self.logger.info(f"gatherData called - referencePiece: {referencePiece}")
+        self.logger.debug(f"gatherData called - data gathered: {self.referencePiece}")
+
+    def matchCounters(self, toMatch: str) -> int:
         """
         This method is used in formatting string entries from the .csv files using pure voodoo.
         Afterwards it actually calculates the amount of matching notes (and thus harmonic context)
@@ -256,7 +320,12 @@ class databaseMain:
         :toMatch: string representation of the notes column in the datbase snippets database TODO
         :return: sum of the commonly present notes TODO
         """
-        toCount = ast.literal_eval(toMatch)
+        toCount: List[int] = ast.literal_eval(toMatch)
         toCount = [int(x) for x in toCount]
         toCount = Counter(toCount)
+
+        # perform logging operations
+        self.logger.info(f"matchCounters called - toMatch: {toMatch}")
+        self.logger.debug(f"matchCounters called - toCount: {toCount}")
+
         return sum((self.notesRef & toCount).values())

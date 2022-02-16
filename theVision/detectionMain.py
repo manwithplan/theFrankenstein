@@ -1,56 +1,10 @@
-"""
-
-detectionMain takes the filtered screenshots from visionMain as input and ties together all the algorithms 
-to make each seperate detection. At the end of the logic tree it will return the current state.
-
-the main function in this class does exactly that, by using a number of optimized functions for the different 
-objects and state we try to detect. 
-
-- stateLogic attempts to write a decision tree that takes into account several detection results. If no planet is 
-detected but a docking screen is that means we are docking with a space station.
-
-- runDetection: responsible for unpacking and structuring the inputs, calling the bulk of the detection functions
-and organizing them and storing the results of the detection as flags to be interpreted in determining the gameState.
-
-- cropWindow: local function used by the detection functions to select a Region Of Interest and decrease the workload
-
-- detectionHUD: detect the presence of the HUD on the screen. This is done by detecting the lines of the 2 menu 
-bars near the top of the window and calculating the angle. If the angle is within a margin of 
-error of a predetermined angle we can confidently say that we are in-game because a HUD is detected. 
-
-- detectionDocking: detects the presence of the docking screen that occurs after requesting clearance to dock. This is 
-done by selecting ROI and detecting the blue color that is used for the message. If we then detect a 
-few lines at a certain distance of one another and of a certain length we can detect the message.
-
-- detectionConflict: selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain 
-threshold we can somewhat confidently say the player is engaging an enemy ship.
-
-- detectionSpeed: Detects the current speed of the player's ship. The trick here is to define a min and max very close at say 0 and 1 and allow the game 
-to set them in real-time, if the player goes full speed a new max speed is set and the speed is calculated as a ratio between the min and 
-max. More concretely we detect the area of the green speed bar which is convered by speed bars. 
-
-- detectionPlanet: Detect the present of a different HUD that is only visible when near a planet in the game. The line to be detected 
-is a vertical green line of a certain length.
-
-- detectionShields: detecting the health level of the shields in game. Detecting the number of pixels of a blue color within 
-the ROI of the players ship icon is the main mechanism. The game always starts with full shields, so we 
-set that as a maximum and then always compare the current amount of pixels to it. The ratio between these 2 
-give the percentage of shields currently left.
-
-- detectionMinimap: Detecting the amount of hostiles, we filter the red colors from the ROI of the minimap in the middle of the 
-HUD. When we dilate these pixels we come up with several 'blobs', and count them. The amount of blobs counted is 
-equal to the amount of hostiles detected. 
-
-- detectionSupercruise: When the player is in supercruise a number of grey vertical lines are shown on each side of the FOV. They 
-slide into each other in a pseudo Doppler effect to tell the current speed. We simply cselect the POV and 
-count the amount of lines we have, and if there are more than 2, to determine supercruise.
-
-"""
 import time
 import numpy as np
 from scipy import ndimage
 import imutils
 import cv2
+from typing import List, Set, Dict, Tuple, Optional, Union, Any, TypeVar, Bytes
+import logging
 
 from Settings.Settings import (
     coordinatesHUD,
@@ -66,45 +20,123 @@ from Settings.Settings import (
 
 
 class detectionMain:
-    def __init__(self):
+    """
+    DetectionMain takes the filtered screenshots from visionMain as input and ties together all the algorithms
+    to make each seperate detection. At the end of the logic tree it will return the current state.
+
+    the main function in this class does exactly that, by using a number of optimized functions for the different
+    objects and state we try to detect.
+
+    ...
+
+    Attributes
+    ----------
+    gameState : str
+        string representing the current gamestate
+
+    preview : Image
+        debuggin image.
+
+    Methods
+    -------
+
+    stateLogic() :
+        attempts to write a decision tree that takes into account several detection results. If no planet is
+        detected but a docking screen is that means we are docking with a space station.
+
+    runDetection() :
+        responsible for unpacking and structuring the inputs, calling the bulk of the detection functions
+        and organizing them and storing the results of the detection as flags to be interpreted in determining the gameState.
+
+    cropWindow() :
+        local function used by the detection functions to select a Region Of Interest and decrease the workload
+
+    detectionHUD() :
+        detect the presence of the HUD on the screen. This is done by detecting the lines of the 2 menu
+        bars near the top of the window and calculating the angle. If the angle is within a margin of
+        error of a predetermined angle we can confidently say that we are in-game because a HUD is detected.
+
+    detectionDocking() :
+        detects the presence of the docking screen that occurs after requesting clearance to dock. This is
+        done by selecting ROI and detecting the blue color that is used for the message. If we then detect a
+        few lines at a certain distance of one another and of a certain length we can detect the message.
+
+    detectionConflict() :
+        selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain
+        threshold we can somewhat confidently say the player is engaging an enemy ship.
+
+    detectionSpeed() :
+        Detects the current speed of the player's ship. The trick here is to define a min and max very close at say 0 and 1 and allow the game
+        to set them in real-time, if the player goes full speed a new max speed is set and the speed is calculated as a ratio between the min and
+        max. More concretely we detect the area of the green speed bar which is convered by speed bars.
+
+    detectionPlanet() :
+        Detect the present of a different HUD that is only visible when near a planet in the game. The line to be detected
+        is a vertical green line of a certain length.
+
+    detectionShields() :
+        detecting the health level of the shields in game. Detecting the number of pixels of a blue color within
+        the ROI of the players ship icon is the main mechanism. The game always starts with full shields, so we
+        set that as a maximum and then always compare the current amount of pixels to it. The ratio between these 2
+        give the percentage of shields currently left.
+
+    detectionMinimap() :
+        Detecting the amount of hostiles, we filter the red colors from the ROI of the minimap in the middle of the
+        HUD. When we dilate these pixels we come up with several 'blobs', and count them. The amount of blobs counted is
+        equal to the amount of hostiles detected.
+
+    detectionSupercruise() :
+        When the player is in supercruise a number of grey vertical lines are shown on each side of the FOV. They
+        slide into each other in a pseudo Doppler effect to tell the current speed. We simply cselect the POV and
+        count the amount of lines we have, and if there are more than 2, to determine supercruise.
+    """
+
+    def __init__(self) -> None:
         super().__init__()
 
+        # initalize logger object
+        self.logger: object = logging.getLogger(__name__)
+        self.logger.info("detectionMain object initialized")
+
         # initialize the inputImage variables
-        self.inputGreen = None
-        self.inputBlue = None
-        self.inputRed = None
-        self.inputWhite = None
-        self.inputGray = None
+        self.inputGreen: TypeVar("Image") = None
+        self.inputBlue: TypeVar("Image") = None
+        self.inputRed: TypeVar("Image") = None
+        self.inputWhite: TypeVar("Image") = None
+        self.inputGray: TypeVar("Image") = None
 
         # initialize detection flags
-        self.detectedHUD = False
-        self.detectedDocking = False
-        self.detectedConflict = False
-        self.detectedPlanet = False
-        self.detectedSupercruise = False
+        self.detectedHUD: bool = False
+        self.detectedDocking: bool = False
+        self.detectedConflict: bool = False
+        self.detectedPlanet: bool = False
+        self.detectedSupercruise: bool = False
 
         # initialize numerical detection variables
-        self.detectedSpeed = None
-        self.lowSpeed = None
-        self.highSpeed = None
+        self.detectedSpeed: Union[None, float] = None
+        self.lowSpeed: Union[None, float] = None
+        self.highSpeed: Union[None, float] = None
 
-        self.detectedShields = 0
-        self.maxShields = 1
-        self.minShields = 0
+        self.detectedShields: Union[int, float] = 0
+        self.maxShields: Union[int, float] = 1
+        self.minShields: Union[int, float] = 0
 
-        self.detectedHostiles = 0
+        self.detectedHostiles: int = 0
 
         # initialize gameState variables
-        self.detectionState = False
-        self.gameState = "None"
-        self.gameStateList = ["None"] * 10
-        self.gameStateAvg = "None"
+        self.detectionState: bool = False
+        self.gameState: str = "None"
+        self.gameStateList: List[str] = ["None"] * 10
+        self.gameStateAvg: str = "None"
 
         # debugging preview
-        self.preview = None
+        self.preview: TypeVar("Image") = None
 
-    def stateLogic(self):
-        # state detection is ran from inside run detection as a final step to get the current game state.
+    def stateLogic(self) -> None:
+        """
+        Hierarchical tree structure determining the eventual gamestate based on the flags detected.
+        """
+
         if self.detectedHUD:
 
             self.detectionState = True
@@ -158,28 +190,37 @@ class detectionMain:
         self.gameStateList.append(self.gameState)
         self.gameStateAvg = max(set(self.gameStateList), key=self.gameStateList.count)
 
-    def runDetection(self, inputs, timeIt=False):
-        # responsible for unpacking and structuring the inputs, calling the bulk of the detection functions
-        # and organizing them and storing the results of the detection as flags to be interpreted in determining the gameState.
+        # perform logging operations
+        self.logger.debug(f"stateLogic method called")
+        self.logger.debug(f"self.gameState : {self.gameState}")
+
+    def runDetection(self, inputs: TypeVar("Image"), timeIt: bool = False) -> None:
+        """
+        Method responsible for unpacking and structuring the inputs, calling the bulk of the detection functions
+        and organizing them and storing the results of the detection as flags to be interpreted in determining the gameState.
+
+        :inputs: screenshot grabbed by screenGrab module.
+        :timeIt: flag to control whether functions are timed for debugging.
+        """
 
         if timeIt:
             # initialize some timing vars
-            HUDTime = 0
-            rotationTime = 0
-            dockingTime = 0
-            conflictTime = 0
-            speedTime = 0
-            planetTime = 0
-            shieldsTime = 0
-            miniMapTime = 0
-            supercruiseTime = 0
+            HUDTime: float = 0
+            rotationTime: float = 0
+            dockingTime: float = 0
+            conflictTime: float = 0
+            speedTime: float = 0
+            planetTime: float = 0
+            shieldsTime: float = 0
+            miniMapTime: float = 0
+            supercruiseTime: float = 0
 
         # gather the images from input
-        self.inputGreen = cv2.cvtColor(inputs[0], cv2.COLOR_BGR2GRAY)
-        self.inputBlue = cv2.cvtColor(inputs[1], cv2.COLOR_BGR2GRAY)
-        self.inputRed = cv2.cvtColor(inputs[2], cv2.COLOR_BGR2GRAY)
-        self.inputWhite = cv2.cvtColor(inputs[3], cv2.COLOR_BGR2GRAY)
-        self.inputGray = cv2.cvtColor(inputs[4], cv2.COLOR_BGR2GRAY)
+        self.inputGreen: TypeVar("Image") = cv2.cvtColor(inputs[0], cv2.COLOR_BGR2GRAY)
+        self.inputBlue: TypeVar("Image") = cv2.cvtColor(inputs[1], cv2.COLOR_BGR2GRAY)
+        self.inputRed: TypeVar("Image") = cv2.cvtColor(inputs[2], cv2.COLOR_BGR2GRAY)
+        self.inputWhite: TypeVar("Image") = cv2.cvtColor(inputs[3], cv2.COLOR_BGR2GRAY)
+        self.inputGray: TypeVar("Image") = cv2.cvtColor(inputs[4], cv2.COLOR_BGR2GRAY)
 
         start_time = time.time()
 
@@ -281,18 +322,16 @@ class detectionMain:
                 )
 
                 # running proximity to minimap detection algo:
-                self.preview = self.detectionMiniMap(
+                _ = self.detectionMiniMap(
                     [
                         self.cropWindow(self.inputRed, coordinatesMiniMap),
                         self.cropWindow(self.inputWhite, coordinatesMiniMap),
-                    ],
-                    debugMode=True,
+                    ]
                 )
 
                 # running proximity to supercruise detection algo w time:
                 _ = self.detectionSupercruise(
-                    self.cropWindow(self.inputGray, coordinatesSupercruise),
-                    debugMode=True,
+                    self.cropWindow(self.inputGray, coordinatesSupercruise)
                 )
 
         self.stateLogic()
@@ -308,51 +347,54 @@ class detectionMain:
                 + miniMapTime
                 + supercruiseTime
             )
-            print(
-                " \n state : {} - total time : {:.3f} \n HUD : {} in {:.3f}s \n rotation in {:.3f}s \n docking : {} in {:.3f}s \n conflict : {} in {:.3f}s \n speed : {:.2f} in {:.3f}s \n planet : {} in {:.3f}s \n shields : {:.2f} in {:.3f}s \n hostiles : {} in {:.3f}s \n supercruise : {} in {:.3f}s".format(
-                    self.gameStateList,
-                    totalTime,
-                    self.detectedHUD,
-                    HUDTime,
-                    rotationTime,
-                    self.detectedDocking,
-                    dockingTime,
-                    self.detectedConflict,
-                    conflictTime,
-                    self.detectedSpeed,
-                    speedTime,
-                    self.detectedPlanet,
-                    planetTime,
-                    self.detectedShields,
-                    shieldsTime,
-                    self.detectedHostiles,
-                    miniMapTime,
-                    self.detectedSupercruise,
-                    supercruiseTime,
-                ),
-                end="\r",
+            # perform logging operations
+            self.logger.debug(f"runDetection method called")
+            self.logger.debug(
+                f"state : {self.gameStateList} - total time : {totalTime} HUD : {self.detectedHUD} in {HUDTime}s rotation in {rotationTime}s"
+            )
+            self.logger.debug(
+                f"docking : {self.detectedDocking} in {dockingTime}s conflict : {self.detectedConflict} in {conflictTime}s speed : {self.detectedSpeed} in {speedTime}s"
+            )
+            self.logger.debug(
+                f"planet : {self.detectedPlanet} in {planetTime}s shields : {self.detectedShields} in {shieldsTime}s hostiles : {self.detectedHostiles} in {miniMapTime}s supercruise : {self.detectedSupercruise} in {supercruiseTime}s"
             )
 
-    def cropWindow(self, inputImage, coordinates):
-        # local function used by the detection functions to select a Region Of Interest and decrease the workload
-        y1 = int(inputImage.shape[0] * coordinates[0])
-        y2 = int(inputImage.shape[0] * coordinates[1])
-        x1 = int(inputImage.shape[1] * coordinates[2])
-        x2 = int(inputImage.shape[1] * coordinates[3])
+    def cropWindow(
+        self, inputImage: TypeVar("Image"), coordinates: List[int]
+    ) -> TypeVar("Image"):
+        """
+        local function used by the detection functions to select a Region Of Interest and decrease the workload
+
+        :inputImage: PIL Image no be cropped
+        :coordinates: the coordinates of the ROI we want to crop
+        :return: cropped PIL Image
+        """
+
+        y1: int = int(inputImage.shape[0] * coordinates[0])
+        y2: int = int(inputImage.shape[0] * coordinates[1])
+        x1: int = int(inputImage.shape[1] * coordinates[2])
+        x2: int = int(inputImage.shape[1] * coordinates[3])
         return inputImage[y1:y2, x1:x2]
 
-    def detectionHUD(self, inputImage, searchArea=None, debugMode=False):
-        # detect the presence of the HUD on the screen. This is done by detecting the lines of the 2 menu
-        # bars near the top of the window and calculating the angle. If the angle is within a margin of
-        # error of a predetermined angle we can confidently say that we are in-game because a HUD is detected.
+    def detectionHUD(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> List[TypeVar("Image"), float]:
+        """
+        detect the presence of the HUD on the screen. This is done by detecting the lines of the 2 menu
+        bars near the top of the window and calculating the angle. If the angle is within a margin of
+        error of a predetermined angle we can confidently say that we are in-game because a HUD is detected.
 
-        anglesLeft = []
-        anglesRight = []
+        inputImage: PIL Image to be processed
+        debugMode: Flag representing debugging or not.
+        """
 
-        avgLeft = 0
-        avgRight = 0
+        anglesLeft: List[float] = []
+        anglesRight: List[float] = []
 
-        screenAngle = 0
+        avgLeft: float = 0
+        avgRight: float = 0
+
+        screenAngle: float = 0
 
         edges = cv2.Canny(inputImage, 50, 150, apertureSize=3)
 
@@ -393,23 +435,32 @@ class detectionMain:
         except Exception as e:
             self.detectedHUD = False
 
+        # perform logging operations
+        self.logger.debug(f"detectionHUD method called, {self.detectedHUD}")
+        self.logger.debug(
+            f"avgLeft : {avgLeft} - avgRight : {avgRight} - distance : {avgRight - avgLeft} - screenAngle : {screenAngle}"
+        )
+
         if debugMode:
-            print(
-                "avgLeft : {:.2f} - avgRight : {:.2f} - distance : {:.2f} - screenAngle : {:.2f}".format(
-                    avgLeft, avgRight, avgRight - avgLeft, screenAngle
-                )
-            )
             return [inputImage, screenAngle]
 
         return [None, screenAngle]
 
-    def detectionDocking(self, inputImage, debugMode=False):
-        # detects the presence of the docking screen that occurs after requesting clearance to dock. This is
-        # done by selecting ROI and detecting the blue color that is used for the message. If we then detect a
-        # few lines at a certain distance of one another and of a certain length we can detect the message
+    def detectionDocking(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        Detects the presence of the docking screen that occurs after requesting clearance to dock. This is
+        done by selecting ROI and detecting the blue color that is used for the message. If we then detect a
+        few lines at a certain distance of one another and of a certain length we can detect the message
+
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the editid Image object.
+        """
 
         # initialiing a variable to store how many matches are found.
-        matches = 0
+        matches: int = 0
 
         try:
 
@@ -445,28 +496,39 @@ class detectionMain:
         else:
             self.detectedDocking = False
 
+        self.logger.debug(f"detectedDocking method called, {self.detectedDocking}")
+
         if debugMode:
             return inputImage
 
         return None
 
-    def detectionConflict(self, inputImage, inputImageNormalize, debugMode=False):
-        # selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain
-        # threshold we can somewhat confidently say the player is engaging an enemy ship. The second input is there to
-        # normalize the general scale of red, because false positives are detected when in a certain angle of a sun.
+    def detectionConflict(
+        self,
+        inputImage: TypeVar("Image"),
+        inputImageNormalize: TypeVar("Image"),
+        debugMode: bool = False,
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        Selects the targeted ship icon and detects the amount of red pixels present. If this amount crosses a certain
+        threshold we can somewhat confidently say the player is engaging an enemy ship. The second input is there to
+        normalize the general scale of red, because false positives are detected when in a certain angle of a sun.
 
+        :inputImage: PIL Image to be processed
+        :inputImageNormalize: PIL Image that is used to normalize color variance.
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the editid Image object.
+        """
         try:
 
-            zeros_in_area = cv2.countNonZero(inputImage)
-            zeros_in_test = cv2.countNonZero(inputImageNormalize)
+            zeros_in_area: int = cv2.countNonZero(inputImage)
+            zeros_in_test: int = cv2.countNonZero(inputImageNormalize)
 
             if zeros_in_test > 20000:
                 conflictThresholdMin = 9000
-                conflictThresholdMax = 170000
 
             else:
                 conflictThresholdMin = 5000
-                conflictThresholdMax = 110000
 
             if zeros_in_area > conflictThresholdMin:
                 self.detectedConflict = True
@@ -476,23 +538,32 @@ class detectionMain:
         except Exception as e:
             pass
 
-        if debugMode:
+        self.logger.debug(f"detectionConflict method called, {self.detectionConflict}")
+        try:
+            self.logger.debug(
+                f"zeros : {zeros_in_area} - test : {zeros_in_test} - ratio : {zeros_in_area/zeros_in_test}"
+            )
+        except ZeroDivisionError:
+            pass
 
-            try:
-                print(
-                    f"zeros : {zeros_in_area} - test : {zeros_in_test} - ratio : {zeros_in_area/zeros_in_test}"
-                )
-            except ZeroDivisionError:
-                pass
+        if debugMode:
 
             return inputImage
 
         return None
 
-    def detectionSpeed(self, inputImage, debugMode=False):
-        # detects the current speed of the player's ship. The trick here is to define a min and max very close at say 0 and 1 and allow the game
-        # to set them in real-time, if the player goes full speed a new max speed is set and the speed is calculated as a ratio between the min and
-        # max. More concretely we detect the area of the green speed bar which is convered by speed bars.
+    def detectionSpeed(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        detects the current speed of the player's ship. The trick here is to define a min and max very close at say 0 and 1 and allow the game
+        to set them in real-time, if the player goes full speed a new max speed is set and the speed is calculated as a ratio between the min and
+        max. More concretely we detect the area of the green speed bar which is convered by speed bars.
+
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the edited Image object.
+        """
 
         try:
             ret, thresh = cv2.threshold(inputImage, 200, 255, 0)
@@ -516,15 +587,27 @@ class detectionMain:
         except:
             pass
 
+        # perform logging operations
+        self.logger.debug(f"detectionSpeed method called, {self.detectionSpeed}")
+
         if debugMode:
             return inputImage
 
         return None
 
-    def detectionPlanet(self, inputImage, debugMode=False):
-        # Detect the present of a different HUD that is only visible when near a planet in the game. The line to be detected
-        # is a vertical green line of a certain length.
-        matches = 0
+    def detectionPlanet(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        Detect the present of a different HUD that is only visible when near a planet in the game. The line to be detected
+        is a vertical green line of a certain length.
+
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the edited Image object.
+        """
+
+        matches: int = 0
 
         try:
 
@@ -561,20 +644,31 @@ class detectionMain:
         else:
             self.detectedPlanet = False
 
+        # perform logging operations
+        self.logger.debug(f"detectionPlanet method called, {self.detectionPlanet}")
+
         if debugMode:
             return inputImage
 
         return None
 
-    def detectionShields(self, inputImage, debugMode=False):
-        # detecting the health level of the shields in game. Detecting the number of pixels of a blue color within
-        # the ROI of the players ship icon is the main mechanism. The game always starts with full shields, so we
-        # set that as a maximum and then always compare the current amount of pixels to it. The ratio between these 2
-        # give the percentage of shields currently left.
+    def detectionShields(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        Detecting the health level of the shields in game. Detecting the number of pixels of a blue color within
+        the ROI of the players ship icon is the main mechanism. The game always starts with full shields, so we
+        set that as a maximum and then always compare the current amount of pixels to it. The ratio between these 2
+        give the percentage of shields currently left.
+
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the edited Image object.
+        """
 
         try:
 
-            zeros = cv2.countNonZero(inputImage)
+            zeros: int = cv2.countNonZero(inputImage)
 
             if zeros > self.maxShields:
                 self.maxShields = zeros
@@ -584,16 +678,28 @@ class detectionMain:
         except:
             pass
 
+        # perform logging operations
+        self.logger.debug(f"detectionShields method called, {self.detectionShields}")
+        self.logger.debug(f"zeros, {zeros}")
+
         if debugMode:
             return inputImage
 
         return None
 
-    def detectionMiniMap(self, inputImages, debugMode=False):
-        # Detecting the amount of hostiles, we filter the red colors from the ROI of the minimap in the middle of the
-        # HUD. When we dilate these pixels we come up with several 'blobs', and count them. The amount of blobs counted is
-        # equal to the amount of hostiles detected.
-        matches = 0
+    def detectionMiniMap(
+        self, inputImages: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        Detecting the amount of hostiles, we filter the red colors from the ROI of the minimap in the middle of the
+        HUD. When we dilate these pixels we come up with several 'blobs', and count them. The amount of blobs counted is
+        equal to the amount of hostiles detected.
+
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the edited Image object.
+        """
+        matches: int = 0
 
         try:
 
@@ -628,17 +734,29 @@ class detectionMain:
 
         self.detectedHostiles = matches - 2
 
+        # perform logging operations
+        self.logger.debug(f"detectionMiniMap method called, {self.detectionMiniMap}")
+        self.logger.debug(f"area, {area}")
+
         if debugMode:
             return combined
 
         return None
 
-    def detectionSupercruise(self, inputImage, debugMode=False):
-        # When the player is in supercruise a number of grey vertical lines are shown on each side of the FOV. They
-        # slide into each other in a pseudo Doppler effect to tell the current speed. We simply cselect the POV and
-        # count the amount of lines we have, and if there are more than 2, to determine supercruise.
+    def detectionSupercruise(
+        self, inputImage: TypeVar("Image"), debugMode: bool = False
+    ) -> Union[None, TypeVar("Image")]:
+        """
+        When the player is in supercruise a number of grey vertical lines are shown on each side of the FOV. They
+        slide into each other in a pseudo Doppler effect to tell the current speed. We simply cselect the POV and
+        count the amount of lines we have, and if there are more than 2, to determine supercruise.
 
-        matches = 0
+        :inputImage: PIL Image to be processed
+        :debugMode: Flag representing debugging or not.
+        :return: None if not debugging, otherwise the edited Image object.
+        """
+
+        matches: int = 0
         self.detectedSupercruise = False
 
         try:
@@ -675,6 +793,12 @@ class detectionMain:
 
         if matches >= 1:
             self.detectedSupercruise = True
+
+        # perform logging operations
+        self.logger.debug(
+            f"detectedSupercruise method called, {self.detectedSupercruise}"
+        )
+        self.logger.debug(f"matches, {matches}")
 
         if debugMode:
             return inputImage

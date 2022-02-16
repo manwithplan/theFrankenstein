@@ -1,26 +1,33 @@
+from typing import List, Set, Dict, Tuple, Optional, Union
+import logging
+
+
 class contextMain:
     """
     Keeps track of the current game state and uses a decision making process to return which mood to play next.
     """
 
     def __init__(self) -> None:
+        # setup logger
+        self.logger = logging.getLogger(__name__)
+
         # variable that sets an activity level for playback
         # 0 - been playing for a long time
         # 1 - in regular range of playback
         # 2 - haven't played much for a long time
-        self.activityLevel = 2
+        self.activityLevel: int = 2
 
         # variable that keeps track of how many ticks the object has received
-        self.ticksReceived = 0
+        self.ticksReceived: int = 0
 
         # variable that keeps track of how long since the state has changed.
-        self.ticksSinceChange = 0
+        self.ticksSinceChange: int = 0
 
         # variable that keeps track of the current state
-        self.currentState = None
+        self.currentState: bool = None
 
         # variable that keeps track of whether the app is currently playing music
-        self.playbackActive = True
+        self.playbackActive: bool = True
 
         # list of dicts that stores which gamestates have been played before, and how long.
         # {
@@ -30,10 +37,10 @@ class contextMain:
         #   'end': int for when it stopped,
         #   'PrimaryKey': int representing piece,
         # }
-        self.gameStateHistory = []
+        self.gameStateHistory: Dict[str, Union[str, int]] = []
 
         # list containing the available moods TODO put them in the settings file as global vars
-        self.moods = [
+        self.moods: List[str] = [
             "Dark",
             "Chill",
             "Epic",
@@ -44,7 +51,7 @@ class contextMain:
             "Romantic",
         ]
         # list containing the available detection TODO put them in the settings file as global vars
-        self.detections = [
+        self.detections: List[str] = [
             "conflictZone",
             "conflictDogFight",
             "planetaryLanding",
@@ -79,7 +86,7 @@ class contextMain:
         self.decisionMatrix = None
         self.initDecisionMatrix()
 
-    def main(self, gameStateOld, gameStateNew, PrimaryKey=None):
+    def main(self, gameStateOld: str, gameStateNew: str, PrimaryKey: int = None) -> str:
         """
         main method that keeps track of the playback context and makes the decision what mood will be next
 
@@ -88,6 +95,10 @@ class contextMain:
         :PrimaryKey: int representing which piece has been played
         :return: string representing mood to be played next OR None in case no change to playback should be made
         """
+
+        self.logger.info(
+            f"context main calles with gamestates new: {gameStateOld} and old: {gameStateNew}. Primary Key: {PrimaryKey}"
+        )
 
         # first things first, store each tick.
         self.ticksReceived += 1
@@ -105,6 +116,10 @@ class contextMain:
                 self.activityLevel = 1
 
             mood = None
+
+            self.logger.debug(
+                f"gamestate unchanged - activity level at {self.activityLevel}, ticks since change: {self.ticksSinceChange}"
+            )
 
         else:
             # else take note of the change in game state and store it.
@@ -134,6 +149,11 @@ class contextMain:
                 # to try the second element of the list if the first doesn't find any corresponding
                 # matches, from the similarity lookup.
                 mood = self.decisionMatrix[x][y][self.activityLevel][0]
+
+                self.logger.debug(
+                    f"gamestate changed - new mood {mood} for transition from {x} to {y} state."
+                )
+
             except ValueError as e:
 
                 # There is a bad practice here, I am using the string "None" to represent no detection made.
@@ -141,8 +161,14 @@ class contextMain:
                 # they both have a use. This is what I am solving below.
                 if gameStateNew == "None":
                     mood = None
+                    self.logger.warning(
+                        f"gamestate changed - with ValueError - new gameState is None"
+                    )
                 else:
                     mood = gameStateNew
+                    self.logger.warning(
+                        f"gamestate changed - with ValueError - new gameState is {mood}"
+                    )
 
         return mood
 
@@ -150,6 +176,8 @@ class contextMain:
         """
         writes all relevant information to the decision matrix
         """
+
+        self.logger.info("decision matrix initialized")
 
         # create the matrix based on the amount of possible detections
         self.decisionMatrix = [
