@@ -5,6 +5,7 @@
 	1. [Repo Architecture](#repo-architecture)
 	2. [Modules](#Modules)
 2. [Installation](#installation)
+3. [Tech](#tech)
 
 # Description
 
@@ -103,4 +104,13 @@ is made based an the combination of several different detection algorhithms comb
 - Clone the repository and install the dependencies with `requirements.txt`
 - Run `app.py` to execute the script.
 
+## Tech
+The source code uses the folowing libraries:
+
+- **Pillow**, **OpenCV** and **MatPlotLib** for computer vision
+- **PyAudio** and **PyDub** for audio signal processing
+- **Pandas** for data processing
+- **PySide6** for the GUI
+- **Numpy** for fun
+- 
 **[Back to top](#table-of-contents)**
