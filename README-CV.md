@@ -12,6 +12,31 @@ movements.
 
 In the examples below you can see the analyzed ROI in the top corners.
 
+## Docking
+
+
+
+From time to time the player docks with massive space stations, to among others refuel. We can detect this action by looking 
+for an authorisation screen that pops up just above the minimap. These consist of a light blue text inside a few lines. When 
+we filter for these colors and apply probabilistic Hough lines detection we can detect the presence of these lines and mark
+it detected.
+
+
+
+![](./theResources/docking.gif)
+
+
+## Speed
+
+
+
+To detect the player's ship speed, we can take a look at the speed gauge on the right of the minimap. Again we filter out 
+the color, but this time we dilate the image so the green bars flow into each other and make one large blob. When we detect
+the contours then, we can select the largest one and the ratio of the surface are can be used to measure speed.
+
+
+
+![](./theResources/speed.gif)
 
 
 ## Conflict Detection
@@ -28,7 +53,7 @@ we are cropping out has a large amount of these red pixels in them.
 
 
 
-## Conflict Detection
+## Conflict Zone Detection
 
 
 
@@ -39,32 +64,3 @@ is above a certain threshold an enemy is counted.
 
 
 ![](./theResources/conflict-multiple.gif)
-
-
-
-## Docking
-
-
-
-From time to time the player docks with massive space stations, to among others refuel. We can detect this action by looking 
-for an authorisation screen that pops up just above the minimap. These consist of a light blue text inside a few lines. When 
-we filter for these colors and apply probabilistic Hough lines detection we can detect the presence of these lines and mark
-it detected.
-
-
-
-![](./theResources/docking.gif)
-
-
-
-## Speed
-
-
-
-To detect the player's ship speed, we can take a look at the speed gauge on the right of the minimap. Again we filter out 
-the color, but this time we dilate the image so the green bars flow into each other and make one large blob. When we detect
-the contours then, we can select the largest one and the ratio of the surface are can be used to measure speed.
-
-
-
-![](./theResources/speed.gif)
