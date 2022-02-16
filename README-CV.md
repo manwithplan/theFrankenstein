@@ -1,12 +1,12 @@
 # Computer Vision
 
 
-Below are examples of object recognition and detection from a live feed of the game **Elite: Dangerous**, a space simulator
+Below are examples of *object recognition* and *detection* from a live feed of the game **Elite: Dangerous**, a space simulator
 video game where we are trying to detect the action the player is currently undertaking in real time. This is combined with
 music playback capabilities to make a live soundtrack to the game.
 
-Using OpenCV all these detections are marked as flags, and combined a decision tree to extract the current player's state.
-All of them use HSV filtering as opposed to RGB to take lighting changes into account, as well as a focused cropped out area
+Using **OpenCV** all these detections are marked as flags, and combined in a decision tree to extract the current player's state.
+All of them use **HSV filtering** as opposed to **RGB** to take lighting changes into account, as well as a focused cropped out area
 as a Region Of Interest. The whole image is calibrated by rotation and scaling on each frame to take into account player 
 movements.
 
