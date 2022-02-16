@@ -1,19 +1,14 @@
 # The FrankenStein
 
-A music player that mixes existing pieces of music together to form an interactive score generated on the fly.
-
 ## Table of Contents
 1. [Description](#description)
-1. [Objectives](#objectives)
-	1. [Challenges](#challenges)
-	2. [Limitations](#limitations)
-	3. [Further developments](#further-developments)
-1. [Repo Architecture](#repo-architecture)
-1. [Installation](#installation)
-1. [Usage](#usage)
-1. [Visuals](#visuals)
-1. [Timeline](#timeline)
-1. [Personal situation](#personal-situation)
+	1. [Repo Architecture](#repo-architecture)
+	2. [Modules](#Modules)
+2. [Installation](#installation)
+
+# Description
+
+A music player that mixes existing pieces of music together to form an interactive score generated on the fly.
 
 ## Repo Architecture
 ```
@@ -50,10 +45,7 @@ Project/
 |-- app.py
 ```
 
-## Installation
-- Running this app requires a running version of **Elite: Dangerous**
-- Clone the repository and install the dependencies with `requirements.txt`
-- Run `app.py` to execute the script.
+## Modules
 
 ### The Mixer
 
@@ -105,5 +97,10 @@ The matrix also takes into account the results of 2 more subsystems:
 
 The gamestate is extracted in theVision module, where the game screen is located, analyzed and a detection
 is made based an the combination of several different detection algorhithms combined.
+
+## Installation
+- Running this app requires a running version of **Elite: Dangerous**
+- Clone the repository and install the dependencies with `requirements.txt`
+- Run `app.py` to execute the script.
 
 **[Back to top](#table-of-contents)**
