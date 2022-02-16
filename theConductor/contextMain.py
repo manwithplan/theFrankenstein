@@ -4,7 +4,34 @@ import logging
 
 class contextMain:
     """
-    Keeps track of the current game state and uses a decision making process to return which mood to play next.
+    Class that keeps track of the current game state and uses a
+    decision making process to return which mood to play next.
+
+    ...
+
+    Attributes
+    ----------
+    activityLevel : int
+        Fvariable that sets an activity level for playback
+
+    gameStateHistory : Dict
+        Dictionary to keep track of all the gamestates have been played.
+
+    moods : List
+        List containg str of possible moods
+
+    detections : List
+        List containg str of possible gamestate detections
+
+    Methods
+    -------
+
+    main() :
+        main method that keeps track of the playback context and makes the decision what mood will be next
+
+    initDecisionMatrix() :
+        writes all relevant information to the decision matrix
+
     """
 
     def __init__(self) -> None:
@@ -63,25 +90,6 @@ class contextMain:
             "Menu",
             "False",
         ]
-        #
-        # multidimensional list for deciding on a mood taking in old and new game state:
-        # It looks like this
-        # xx  CZ  CD  PL  DO  TR  CR  PE  ST ME FA
-        # CZ
-        # CD
-        # PL
-        # DO
-        # TR
-        # CR
-        # PE
-        # ST
-        # ME
-        # FA
-        #
-        # Where each spot in the matrix is populated by a dict containing activityLevel and corresponding mood keywords
-        # False means don't change,
-        # True means stop
-        # change is for changes in [tempo, valence, arousal]
 
         self.decisionMatrix = None
         self.initDecisionMatrix()

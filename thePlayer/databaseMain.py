@@ -32,8 +32,26 @@ class databaseMain:
 
     Methods
     -------
-    toggleHandler():
-        Function that shows or hides the sidebar when it is clicked.
+    findPieceByMood() :
+        Takes in a mood and return a matching piece that can be played from the start.
+
+    findSimilarPiece() :
+        Takes in a piece of music and looks up close musical matches.
+
+    gatherMoods() :
+        Gathers moods from similar pieces.
+
+    gatherValenceAndArousal() :
+        Gathers valence and Arousal values from the DB
+
+    gatherSnippets() :
+        Gathers snippets for a given piece of music.
+
+    gatherData() :
+        Gather relevant data for a given piece
+
+    matchCounters() :
+        RegEx voodoo, yes it was aweful to write
 
     """
 
