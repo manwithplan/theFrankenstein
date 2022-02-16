@@ -49,7 +49,7 @@ class playerStream:
     getAudioProperties() :
         takes in a fileName and sets the audioProperties to it's audioProperties.
 
-        getAudioPropertiesFromPipeline() :
+    getAudioPropertiesFromPipeline() :
         takes the first element of the pipeline and sets it's audio properties
         to the object's audio properties
 
