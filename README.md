@@ -13,9 +13,10 @@ A music player that mixes existing pieces of music together to form an interacti
 This music player interacts with a Computer Vision module that analyzes data from a live video game, and interacts
 with it.
 
-More information on the [Computer Vision Modules](https://github.com/manwithplan/theFrankenstein/blob/main/README-DATA.md)
-
-More information on the [Audio Data Modules](https://github.com/manwithplan/theFrankenstein/blob/main/README-CV.md)
+- More information on the [Computer Vision Modules](https://github.com/manwithplan/theFrankenstein/blob/main/README-DATA.md)
+- More information on the [Audio Data Modules](https://github.com/manwithplan/theFrankenstein/blob/main/README-CV.md)
+- See it in [action](https://www.youtube.com/watch?v=LHUUnU2xFV0)
+- And with even a little more action [action](https://www.youtube.com/watch?v=sRL47Dh80c4)
 
 ## Repo Architecture
 ```
