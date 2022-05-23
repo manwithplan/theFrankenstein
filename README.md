@@ -9,7 +9,7 @@
 
 # Description
 
-A music player that mixes existing pieces of music together to form an interactive score generated on the fly.
+A fully functioning, stand-alone music player that mixes existing pieces of music together to form an interactive score generated on the fly.
 This music player interacts with a Computer Vision module that analyzes data from a live video game, and interacts
 with it.
 
