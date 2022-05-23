@@ -61,6 +61,9 @@ Similarly we can see the direction of chord voicings move over the different clu
 
 ![](https://raw.githubusercontent.com/manwithplan/theFrankenstein/main/theResources/Distribution_of_chord_voicings.png)
 
+Using manifold learning in this way reduces features to a vector direction in the projection, and when jumping from 1 
+snippet of music to another can be controlled by navigating the 2D projection.
+
 # Combining
 
 In the final dataset, all extracted information is structured so as to make it possible to 
