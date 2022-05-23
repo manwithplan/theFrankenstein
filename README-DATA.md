@@ -34,6 +34,13 @@ This was no trivial task, as the dataset went from 800 pieces to 110k snippets o
 All these are then analyzed based on Valence, Arousal and harmonic context. Using Librosa's
 DSP functionalities as well as pytorch pre-trained models.
 
+# Mapping the data
+
+The similarities between the features of each snippets are mapped onto a 2d projection using the
+UMAP algorithm for manifold learning. the projection looks like this:
+
+![](./theResources/umap_graph.png)
+
 # Combining
 
 In the final dataset, all extracted information is structured so as to make it possible to 
