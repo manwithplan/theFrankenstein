@@ -39,7 +39,7 @@ DSP functionalities as well as pytorch pre-trained models.
 The similarities between the features of each snippets are mapped onto a 2d projection using the
 UMAP algorithm for manifold learning. the projection looks like this.
 
-![](./theResources/umap_graph.png)
+![](/theResources/umap_graph.png)
 
 ## Root Notes
 
@@ -47,19 +47,19 @@ It get's interesting when we plot musical attributes over the projection. When w
 key the music is in it looks like this. This represent the 12 semitones in an octave, much like the 
 keys on a piano.
 
-![](./theResources/umap_root_tone.jpeg)
+![](/theResources/umap_root_tone.jpeg)
 
 ## Tempo Changes
 
 Plotting tempo shows a gradient from slow to fast within each cluster.
 
-![](./theResources/slow_vs_fast_tempo.png)
+![](/theResources/slow_vs_fast_tempo.png)
 
 ## Chord Voicings
 
 Similarly we can see the direction of chord voicings move over the different clusters.
 
-![](./theResources/Distribution_of_chord_voicings_cl.png)
+![](/theResources/Distribution_of_chord_voicings_cl.png)
 
 # Combining
 
