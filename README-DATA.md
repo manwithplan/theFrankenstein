@@ -47,7 +47,7 @@ It get's interesting when we plot musical attributes over the projection. When w
 key the music is in it looks like this. This represent the 12 semitones in an octave, much like the 
 keys on a piano.
 
-![](./theResources/umap_root_tone.jpeg)
+![](https://raw.githubusercontent.com/manwithplan/theFrankenstein/main/theResources/umap_root_note.jpg)
 
 ## Tempo Changes
 
