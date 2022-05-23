@@ -59,7 +59,7 @@ Plotting tempo shows a gradient from slow to fast within each cluster.
 
 Similarly we can see the direction of chord voicings move over the different clusters.
 
-![](./theResources/Distribution_of_chord_voicings_cl.png)
+![](https://raw.githubusercontent.com/manwithplan/theFrankenstein/main/theResources/Distribution_of_chord_voicings.png)
 
 # Combining
 
