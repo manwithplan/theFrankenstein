@@ -89,7 +89,7 @@ All music has been analyzed beforehand by mood keywords, and these are used as e
 is being scored to. In this case Elite: Dangerous. If there is a tense scene it will look for 'dark' or
 'epic' music. If not much is happening, it will be 'calm' or 'peaceful' music.
 
-A matrix is defined that defines in what way the music should change when going from one game state to another.
+A decision matrix is defined that defines in what way the music should change when going from one game state to another.
 
 ### The Changes
 
